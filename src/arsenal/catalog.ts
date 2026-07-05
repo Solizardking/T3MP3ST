@@ -12,6 +12,7 @@ export type ToolCategory =
   | 'cloud'
   | 'container'
   | 'ai_agent'
+  | 'solana'
   | 'smart_contract'
   | 'crypto'
   | 'fuzzing'
@@ -47,6 +48,7 @@ const WEB_FAMILIES: MissionFamily[] = ['web_api', 'reporting_remediation'];
 const SUPPLY_FAMILIES: MissionFamily[] = ['code_supply_chain', 'reporting_remediation'];
 const CLOUD_FAMILIES: MissionFamily[] = ['cloud_infra', 'reporting_remediation'];
 const AI_FAMILIES: MissionFamily[] = ['ai_red_team', 'agent_warfare', 'reporting_remediation'];
+const SOLANA_FAMILIES: MissionFamily[] = ['solana_onchain', 'crypto_secrets', 'code_supply_chain', 'reporting_remediation'];
 const SMART_CONTRACT_FAMILIES: MissionFamily[] = ['smart_contract', 'crypto_secrets', 'code_supply_chain', 'reporting_remediation'];
 const CRYPTO_FAMILIES: MissionFamily[] = ['crypto_secrets', 'code_supply_chain', 'reporting_remediation'];
 const REVERSE_FAMILIES: MissionFamily[] = ['reverse_binary', 'code_supply_chain', 'reporting_remediation'];
@@ -501,6 +503,102 @@ export const TOOL_ADAPTERS: ToolAdapter[] = [
     commandHint: 'promptfoo eval --output results.json',
     parserStatus: 'planned',
     notes: 'Best fit for repeatable prompt/tool/memory regression packs.',
+  },
+  {
+    id: 'solana-cli',
+    binary: 'solana',
+    name: 'Solana CLI',
+    category: 'solana',
+    families: SOLANA_FAMILIES,
+    risk: 'active',
+    execution: 'catalog_only',
+    networked: true,
+    evidenceKinds: ['cluster_context', 'account_metadata', 'simulation_result'],
+    outputFormats: ['json', 'text'],
+    installHint: 'Install Solana CLI from https://docs.solana.com/cli/install-solana-cli-tools or use the official installer.',
+    commandHint: 'Catalog-only until narrow read-only/simulation adapters enforce cluster, account, signer, and no-submit gates.',
+    parserStatus: 'planned',
+    notes: 'The Solana CLI can submit transactions, so it stays catalog-only until explicit no-sign/no-submit adapters exist.',
+  },
+  {
+    id: 'spl-token-cli',
+    binary: 'spl-token',
+    name: 'SPL Token CLI',
+    category: 'solana',
+    families: SOLANA_FAMILIES,
+    risk: 'active',
+    execution: 'catalog_only',
+    networked: true,
+    evidenceKinds: ['token_metadata', 'mint_authority', 'token_account_state'],
+    outputFormats: ['json', 'text'],
+    installHint: 'Install with Solana/SPL tooling (`cargo install spl-token-cli`) where appropriate.',
+    commandHint: 'Catalog-only until read-only token inspection templates are wired.',
+    parserStatus: 'planned',
+    notes: 'Token authority changes and transfers are irreversible enough to require specialized gates.',
+  },
+  {
+    id: 'anchor-cli',
+    binary: 'anchor',
+    name: 'Anchor CLI',
+    category: 'solana',
+    families: SOLANA_FAMILIES,
+    risk: 'local_read',
+    execution: 'catalog_only',
+    networked: false,
+    evidenceKinds: ['idl', 'program_test_result', 'account_constraint'],
+    outputFormats: ['json', 'text'],
+    installHint: 'Install Anchor via avm from https://www.anchor-lang.com/docs/installation.',
+    commandHint: 'Catalog-only until repo-aware templates distinguish `anchor build`, `anchor test`, and IDL inspection.',
+    parserStatus: 'planned',
+    notes: 'Best for local Anchor programs, IDLs, and tests once command templates are narrowed.',
+  },
+  {
+    id: 'codama',
+    binary: 'codama',
+    name: 'Codama',
+    category: 'solana',
+    families: SOLANA_FAMILIES,
+    risk: 'local_read',
+    execution: 'catalog_only',
+    networked: false,
+    evidenceKinds: ['generated_client', 'idl_diff', 'typed_instruction_surface'],
+    outputFormats: ['json', 'typescript'],
+    installHint: 'Install Codama according to the project tooling; many repos use npm package scripts rather than a global binary.',
+    commandHint: 'Catalog-only until project-local generation commands are discovered from package scripts.',
+    parserStatus: 'planned',
+    notes: 'Use for typed Solana client generation and IDL drift checks.',
+  },
+  {
+    id: 'litesvm',
+    binary: 'litesvm',
+    name: 'LiteSVM',
+    category: 'solana',
+    families: SOLANA_FAMILIES,
+    risk: 'local_read',
+    execution: 'catalog_only',
+    networked: false,
+    evidenceKinds: ['local_svm_test', 'transaction_simulation', 'account_diff'],
+    outputFormats: ['json', 'text'],
+    installHint: 'Use the project language binding or package-local test harness; LiteSVM is commonly consumed as a library.',
+    commandHint: 'Catalog-only until repo-local test commands are identified.',
+    parserStatus: 'planned',
+    notes: 'Preferred fast local Solana test layer for deterministic no-network feedback.',
+  },
+  {
+    id: 'surfpool',
+    binary: 'surfpool',
+    name: 'Surfpool',
+    category: 'solana',
+    families: SOLANA_FAMILIES,
+    risk: 'active',
+    execution: 'catalog_only',
+    networked: true,
+    evidenceKinds: ['forked_cluster_test', 'simulation_result', 'state_diff'],
+    outputFormats: ['json', 'text'],
+    installHint: 'Install Surfpool according to its release instructions.',
+    commandHint: 'Catalog-only until fork target, RPC, and no-mainnet-submit gates are wired.',
+    parserStatus: 'planned',
+    notes: 'Useful for realistic Solana integration tests against forked cluster state.',
   },
   {
     id: 'slither',

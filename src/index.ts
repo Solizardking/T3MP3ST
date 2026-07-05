@@ -87,6 +87,36 @@ export {
 } from './target/index.js';
 export type { TargetEvents } from './target/index.js';
 
+// Solana
+export {
+  SOLANA_BASE58_ALPHABET,
+  SOLANA_CLUSTERS,
+  SOLANA_OPERATION_GATES,
+  THREE_ONCHAIN_LAWS,
+  assertSolanaAddress,
+  callSolanaRpc,
+  createSolanaAccountTarget,
+  createSolanaMissionReceipt,
+  createSolanaNativeConfig,
+  createSolanaProgramTarget,
+  createSolanaRpcTarget,
+  createSolanaTokenTarget,
+  decodeBase58,
+  isSolanaAddress,
+  normalizeSolanaCluster,
+  shortenSolanaAddress,
+  solanaConfigFromEnv,
+  solanaExplorerUrl,
+} from './solana/index.js';
+export type {
+  SolanaCluster,
+  SolanaClusterConfig,
+  SolanaCommitment,
+  SolanaIdentityConfig,
+  SolanaNativeConfig,
+  SolanaRpcResponse,
+} from './solana/index.js';
+
 // Evidence
 export {
   EvidenceVault,

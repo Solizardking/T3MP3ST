@@ -15,6 +15,7 @@ import {
   type OperatorArchetype,
 } from '../types/index.js';
 import { KILL_CHAIN_ORDER } from '../operators/index.js';
+import { isSolanaAddress } from '../solana/index.js';
 
 // =============================================================================
 // EVENTS
@@ -51,7 +52,14 @@ export function createDefaultRoE(): RulesOfEngagement {
     allowedTechniques: [],
     forbiddenTechniques: [],
     maxDetectionEvents: 5,
-    requireManualApproval: ['T1078', 'T1059', 'T1548'], // Credential use, command exec, privilege escalation
+    requireManualApproval: [
+      'T1078',
+      'T1059',
+      'T1548',
+      'SOLANA_SIGN_TRANSACTION',
+      'SOLANA_VALUE_MOVEMENT',
+      'SOLANA_AUTHORITY_CHANGE',
+    ], // Credential use, command exec, privilege escalation, and irreversible on-chain actions
   };
 }
 
@@ -65,9 +73,23 @@ export function createStrictRoE(): RulesOfEngagement {
       'T1489', // Service Stop
       'T1490', // Inhibit System Recovery
       'T1499', // Endpoint DoS
+      'SOLANA_FRONT_RUN',
+      'SOLANA_SANDWICH',
+      'SOLANA_RUGPULL',
+      'SOLANA_LIQUIDITY_FRAGMENTATION',
     ],
     maxDetectionEvents: 2,
-    requireManualApproval: ['T1078', 'T1059', 'T1548', 'T1055', 'T1134'],
+    requireManualApproval: [
+      'T1078',
+      'T1059',
+      'T1548',
+      'T1055',
+      'T1134',
+      'SOLANA_SIGN_TRANSACTION',
+      'SOLANA_VALUE_MOVEMENT',
+      'SOLANA_AUTHORITY_CHANGE',
+      'SOLANA_GOVERNANCE_ACTION',
+    ],
   };
 }
 
@@ -558,6 +580,49 @@ export class MissionControl extends EventEmitter<MissionEvents> {
 export function createReconTasks(missionId: string, targetAddress: string): Task[] {
   const tasks: Task[] = [];
 
+  if (isSolanaAddress(targetAddress)) {
+    tasks.push({
+      id: randomUUID(),
+      missionId,
+      name: 'Solana Address Classification',
+      description: `Validate ${targetAddress} as a Solana public key, identify whether it is a program, token mint, wallet, or generic account using read-only RPC metadata, and record cluster/RPC assumptions before deeper review.`,
+      phase: KillChainPhase.RECON,
+      operatorType: 'recon',
+      status: 'pending',
+      priority: 10,
+      dependencies: [],
+      createdAt: Date.now(),
+    });
+
+    tasks.push({
+      id: randomUUID(),
+      missionId,
+      name: 'Solana Account Metadata Review',
+      description: `Use read-only Solana RPC calls for ${targetAddress}. Summarize owner, lamports, executable flag, rent state, and data length without copying raw account data or secrets into evidence.`,
+      phase: KillChainPhase.RECON,
+      operatorType: 'scanner',
+      status: 'pending',
+      priority: 9,
+      dependencies: [],
+      createdAt: Date.now(),
+    });
+
+    tasks.push({
+      id: randomUUID(),
+      missionId,
+      name: 'Solana Program Audit Route',
+      description: `If ${targetAddress} is executable or linked to a local program artifact, generate an Anchor/Pinocchio/native audit route: signers, writable accounts, PDA seeds, CPI targets, token authorities, compute budget, and Token-2022 extension assumptions.`,
+      phase: KillChainPhase.RECON,
+      operatorType: 'analyst',
+      status: 'pending',
+      priority: 8,
+      dependencies: [],
+      createdAt: Date.now(),
+    });
+
+    return tasks;
+  }
+
   tasks.push({
     id: randomUUID(),
     missionId,
@@ -616,6 +681,36 @@ export function createReconTasks(missionId: string, targetAddress: string): Task
 export function createVulnScanTasks(missionId: string, targetAddress: string): Task[] {
   const tasks: Task[] = [];
 
+  if (isSolanaAddress(targetAddress)) {
+    tasks.push({
+      id: randomUUID(),
+      missionId,
+      name: 'Solana Program Constraint Review',
+      description: `Review ${targetAddress} for Solana-specific weakness classes: missing signer/owner/writable checks, PDA seed confusion, remaining-account injection, CPI target substitution, arithmetic/rounding risk, rent/realloc/close edge cases, and unsafe token authority flows.`,
+      phase: KillChainPhase.WEAPONIZE,
+      operatorType: 'scanner',
+      status: 'pending',
+      priority: 10,
+      dependencies: [],
+      createdAt: Date.now(),
+    });
+
+    tasks.push({
+      id: randomUUID(),
+      missionId,
+      name: 'Solana Simulation Plan',
+      description: `Create a no-signing dry-run plan for any suspected issue on ${targetAddress}. Require explicit account metas, expected signers, compute budget, priority fee assumptions, simulation logs, and a human receipt before value movement or authority changes.`,
+      phase: KillChainPhase.WEAPONIZE,
+      operatorType: 'coordinator',
+      status: 'pending',
+      priority: 9,
+      dependencies: [],
+      createdAt: Date.now(),
+    });
+
+    return tasks;
+  }
+
   tasks.push({
     id: randomUUID(),
     missionId,
@@ -661,6 +756,23 @@ export function createVulnScanTasks(missionId: string, targetAddress: string): T
 export function createExploitTasks(missionId: string, targetAddress: string): Task[] {
   const tasks: Task[] = [];
 
+  if (isSolanaAddress(targetAddress)) {
+    tasks.push({
+      id: randomUUID(),
+      missionId,
+      name: 'Solana Dry-Run Evidence Gate',
+      description: `Do not submit transactions. Convert confirmed hypotheses for ${targetAddress} into local/testnet simulation steps, expected account diffs, log assertions, falsifiers, and approval requirements. Any signing, token movement, authority change, governance action, or CPI-triggering live execution stays blocked without a human receipt.`,
+      phase: KillChainPhase.DELIVER,
+      operatorType: 'coordinator',
+      status: 'pending',
+      priority: 10,
+      dependencies: [],
+      createdAt: Date.now(),
+    });
+
+    return tasks;
+  }
+
   tasks.push({
     id: randomUUID(),
     missionId,
@@ -679,6 +791,23 @@ export function createExploitTasks(missionId: string, targetAddress: string): Ta
 
 export function createAnalysisTasks(missionId: string, targetAddress: string): Task[] {
   const tasks: Task[] = [];
+
+  if (isSolanaAddress(targetAddress)) {
+    tasks.push({
+      id: randomUUID(),
+      missionId,
+      name: 'Solana On-Chain Risk Report',
+      description: `Analyze Solana findings for ${targetAddress}. Separate read-only observations, local/testnet simulations, hypotheses, and receipt-gated actions. Include signer/account-meta assumptions, token-program variant, PDA/CPI risks, remediation, and retest acceptance criteria.`,
+      phase: KillChainPhase.ACTIONS,
+      operatorType: 'analyst',
+      status: 'pending',
+      priority: 10,
+      dependencies: [],
+      createdAt: Date.now(),
+    });
+
+    return tasks;
+  }
 
   tasks.push({
     id: randomUUID(),

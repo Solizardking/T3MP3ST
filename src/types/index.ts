@@ -160,7 +160,14 @@ export type TargetType =
   | 'cloud'
   | 'mobile'
   | 'iot'
-  | 'container';
+  | 'container'
+  | 'solana_program'
+  | 'solana_account'
+  | 'solana_token'
+  | 'solana_wallet'
+  | 'solana_validator'
+  | 'solana_rpc'
+  | 'solana_transaction';
 
 export type TargetZone =
   | 'external'
@@ -232,7 +239,7 @@ export interface Finding {
 }
 
 export interface Evidence {
-  type: 'screenshot' | 'log' | 'request' | 'response' | 'file' | 'command' | 'output';
+  type: 'screenshot' | 'log' | 'request' | 'response' | 'file' | 'command' | 'output' | 'rpc_response' | 'transaction_simulation' | 'attestation';
   content: string;
   timestamp: number;
   metadata?: Record<string, unknown>;
@@ -456,6 +463,14 @@ export interface TempestConfig {
   name: string;
   llm: LLMConfig;
   opsec?: Partial<OpsecConfig>;
+  solana?: {
+    cluster?: 'mainnet-beta' | 'devnet' | 'testnet' | 'localnet';
+    rpcUrl?: string;
+    websocketUrl?: string;
+    commitment?: 'processed' | 'confirmed' | 'finalized';
+    tokenGateMint?: string;
+    x402GatewayUrl?: string;
+  };
   operators?: {
     maxConcurrent?: number;
     defaultConfig?: Partial<OperatorConfig>;

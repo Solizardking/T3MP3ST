@@ -2,6 +2,7 @@ export type MissionFamily =
   | 'web_api'
   | 'ai_red_team'
   | 'cloud_infra'
+  | 'solana_onchain'
   | 'smart_contract'
   | 'code_supply_chain'
   | 'crypto_secrets'
@@ -85,6 +86,18 @@ export interface ForefrontPressureLane {
 }
 
 export const WORKFLOW_PRESETS: WorkflowPreset[] = [
+  {
+    id: 'starter-solana-onchain',
+    label: 'I have a Solana program or token',
+    plainLanguage: 'Review a Solana program, account, mint, or transaction flow with read-only RPC, local/testnet simulation gates, and signer/account-meta evidence.',
+    family: 'solana_onchain',
+    route: 'lanes',
+    directive: 'Authorized Solana on-chain review. Identify the cluster, RPC endpoint, program/account/mint scope, signer and writable-account assumptions, SPL Token or Token-2022 surface, PDA/CPI risks, and dry-run requirements. Do not sign, submit, or move value without explicit human receipts.',
+    startingScope: ['solana-program-id-or-account', 'cluster-and-rpc-url', 'local-program-artifacts-if-available'],
+    defaultQuestions: ['Which cluster is in scope?', 'What program id, mint, wallet, or account is in scope?', 'Are local Anchor/Pinocchio sources available?', 'Are testnet simulations allowed?'],
+    expectedOutputs: ['on-chain scope receipt', 'account/program metadata summary', 'Solana audit checklist', 'simulation gate', 'retest criteria'],
+    recommendedResources: ['solana-program-security', 'spl-token-docs', 'token-2022-docs', 'anchor-docs'],
+  },
   {
     id: 'starter-owned-web-app',
     label: 'I own a web app',
@@ -211,18 +224,74 @@ export const FOREFRONT_PRESSURE_LANES: ForefrontPressureLane[] = [
   {
     id: 'frontier-wallet-signing-boundary',
     title: 'Wallet and Signing Intent Boundary',
-    family: 'crypto_secrets',
+    family: 'solana_onchain',
     frontierSignal: 'Agents can help users handle keys, wallets, transactions, contracts, and signing prompts where intent and irreversible action collide.',
-    pressureQuestion: 'Can the system distinguish explanation, simulation, signing intent, secret handling, and irreversible transaction approval?',
-    operatorMove: 'Use local mock wallets and dry-run transaction fixtures to test intent confirmation, key redaction, and irreversible-action gates.',
-    defensiveArtifact: 'Signing-intent checklist, dry-run requirement, key-handling policy, and irreversible-action approval gate.',
-    containment: 'Use testnets, local mocks, fake keys, and no real fund movement.',
-    recommendedResources: ['cwe-top25-2025', 'capec', 'nist-ai-rmf'],
+    pressureQuestion: 'Can the system distinguish explanation, simulation, signing intent, secret handling, and irreversible Solana transaction approval?',
+    operatorMove: 'Use local mock wallets, devnet/localnet dry-run fixtures, and explicit account-meta diffs to test intent confirmation, key redaction, and irreversible-action gates.',
+    defensiveArtifact: 'Solana signing-intent checklist, simulation-before-signing requirement, key-handling policy, and value-movement approval gate.',
+    containment: 'Use localnet/devnet, mock wallets, fake keys, and no mainnet fund movement.',
+    recommendedResources: ['solana-program-security', 'spl-token-docs', 'token-2022-docs', 'nist-ai-rmf'],
     urgency: 'watch',
   },
 ];
 
 export const RESOURCE_PACKS: ResourcePack[] = [
+  {
+    id: 'solana-program-security',
+    title: 'Solana Program Security Course',
+    authority: 'Solana Foundation',
+    url: 'https://solana.com/developers/courses/program-security',
+    sourceType: 'methodology',
+    missionFamilies: ['solana_onchain', 'code_supply_chain', 'reporting_remediation'],
+    useWhen: 'You are reviewing Solana programs for signer, owner, PDA, CPI, account validation, arithmetic, and state-transition flaws.',
+    agentUse: ['Generate Solana audit checklists', 'Map observed code to program-security weakness classes', 'Define local/testnet retests'],
+    humanUse: 'Turns Solana-specific failure modes into reviewable engineering checks.',
+    queryHints: ['signer checks', 'owner checks', 'PDA seeds', 'CPI', 'account validation', 'integer overflow'],
+    evidenceUse: 'Use it as methodology context; attach exact source lines, account metas, simulation logs, and retest results for proof.',
+    caution: 'Do not treat methodology labels as proof. Verify every claim with code, RPC metadata, or simulation evidence.',
+  },
+  {
+    id: 'spl-token-docs',
+    title: 'SPL Token Program Documentation',
+    authority: 'Solana Program Library',
+    url: 'https://spl.solana.com/token',
+    sourceType: 'framework',
+    missionFamilies: ['solana_onchain', 'crypto_secrets', 'reporting_remediation'],
+    useWhen: 'The review touches token mints, token accounts, mint/freeze authorities, associated token accounts, or token movement.',
+    agentUse: ['Check token authority assumptions', 'Explain token account states', 'Generate retest steps for token flows'],
+    humanUse: 'Clarifies how token authorities and accounts should behave before assessing risk.',
+    queryHints: ['mint authority', 'freeze authority', 'associated token account', 'delegate', 'close authority'],
+    evidenceUse: 'Pair token documentation with account metadata and transaction simulation logs.',
+    caution: 'Token account state can change quickly; capture cluster, slot, RPC endpoint, and timestamp.',
+  },
+  {
+    id: 'token-2022-docs',
+    title: 'Token-2022 Extensions Documentation',
+    authority: 'Solana Program Library',
+    url: 'https://spl.solana.com/token-2022',
+    sourceType: 'framework',
+    missionFamilies: ['solana_onchain', 'crypto_secrets', 'reporting_remediation'],
+    useWhen: 'The target uses Token-2022 or may depend on extensions such as transfer hooks, permanent delegates, fees, metadata, or confidential transfers.',
+    agentUse: ['Enumerate extension-specific assumptions', 'Flag unsafe compatibility assumptions', 'Write extension-aware retests'],
+    humanUse: 'Shows why Token-2022 assets need extension-aware review instead of SPL Token assumptions.',
+    queryHints: ['transfer hook', 'permanent delegate', 'transfer fee', 'confidential transfer', 'metadata pointer'],
+    evidenceUse: 'Record which extensions are present and how program logic handles them.',
+    caution: 'Never assume SPL Token and Token-2022 semantics are interchangeable.',
+  },
+  {
+    id: 'anchor-docs',
+    title: 'Anchor Framework Documentation',
+    authority: 'Anchor',
+    url: 'https://www.anchor-lang.com/docs',
+    sourceType: 'framework',
+    missionFamilies: ['solana_onchain', 'code_supply_chain', 'reporting_remediation'],
+    useWhen: 'A Solana program uses Anchor accounts, constraints, IDLs, generated clients, events, or tests.',
+    agentUse: ['Review account constraints', 'Map IDL/client assumptions', 'Define Anchor test coverage'],
+    humanUse: 'Connects Anchor syntax and generated interfaces to real Solana account checks.',
+    queryHints: ['account constraints', 'seeds', 'bump', 'has_one', 'owner', 'IDL', 'tests'],
+    evidenceUse: 'Use Anchor docs to interpret constraints; proof still needs source references and tests.',
+    caution: 'Generated IDLs and clients can lag source behavior; verify against the program source and deployed id.',
+  },
   {
     id: 'mitre-attack-enterprise',
     title: 'MITRE ATT&CK Enterprise Matrix',
@@ -427,6 +496,24 @@ export const RESOURCE_PACKS: ResourcePack[] = [
 
 export const AGENT_PROMPT_PACKS: AgentPromptPack[] = [
   {
+    id: 'prompt-solana-onchain-sentinel',
+    title: 'Solana On-Chain Sentinel',
+    family: 'solana_onchain',
+    roleFrame: 'Review Solana programs, accounts, mints, wallets, and transaction intents with cluster/RPC clarity, signer/account-meta evidence, and simulation-before-signing discipline.',
+    operatingRules: [
+      'Start read-only: validate addresses, cluster, RPC endpoint, account owners, executable flags, and token-program variant before proposing tests.',
+      'Never request or expose seed phrases, private keys, raw wallet secrets, or unredacted sensitive account data.',
+      'Require simulation and human receipts before signing, value movement, authority changes, governance actions, or live CPI-triggering execution.',
+      'Make PDAs, bumps, signers, writable accounts, owners, compute budget, priority fees, and SPL Token/Token-2022 extensions explicit.',
+    ],
+    expectedOutputs: ['on-chain scope map', 'account/program metadata summary', 'program audit plan', 'simulation gate', 'finding and retest criteria'],
+    escalationRules: [
+      'Stop before any wallet prompt unless a human receipt states exact intent, accounts, amount, cluster, and expected simulation result.',
+      'Use localnet/devnet or fixtures for state-changing proofs; mainnet stays read-only by default.',
+    ],
+    evidenceContract: ['cluster and RPC endpoint', 'public key and role', 'owner/executable/token metadata', 'source or IDL reference when available', 'simulation log or explicit gap', 'approval receipt for irreversible actions'],
+  },
+  {
     id: 'prompt-ai-boundary-cartographer',
     title: 'AI Boundary Cartographer',
     family: 'ai_red_team',
@@ -514,6 +601,46 @@ export const AGENT_PROMPT_PACKS: AgentPromptPack[] = [
 ];
 
 export const OPERATOR_RUNBOOKS: OperatorRunbook[] = [
+  {
+    family: 'solana_onchain',
+    title: 'Solana On-Chain Runbook',
+    operatorPromise: 'Map Solana on-chain risk with read-only RPC, source/IDL review, simulation gates, and explicit signer/account-meta evidence.',
+    defaultRoute: 'lanes',
+    phases: [
+      {
+        id: 'scope-cluster',
+        label: 'Scope cluster',
+        humanCue: 'Name the cluster, RPC endpoint, program ids, mints, wallets, accounts, local sources, and allowed simulation level.',
+        agentCue: 'Validate public keys and record cluster/RPC assumptions before any account lookup or test design.',
+        actions: ['record program/account scope', 'classify cluster', 'validate public keys', 'mark signing/value-movement as receipt-gated'],
+        evidenceRequired: ['scope receipt', 'cluster/RPC endpoint', 'public key validation', 'data-handling rule'],
+        exitCriteria: ['cluster is explicit', 'addresses are valid', 'mainnet behavior is read-only unless separately approved'],
+        riskIfSkipped: 'The operator may treat a public key as a host or confuse simulation intent with transaction approval.',
+      },
+      {
+        id: 'map-onchain-state',
+        label: 'Map on-chain state',
+        humanCue: 'Use read-only RPC and local artifacts to identify owners, executable programs, token authorities, PDAs, and writable-account assumptions.',
+        agentCue: 'Summarize metadata without copying raw account data, then connect it to source/IDL constraints when available.',
+        actions: ['lookup account metadata', 'identify owner/executable status', 'inventory token authorities/extensions', 'map PDAs and CPI targets'],
+        evidenceRequired: ['RPC metadata summary', 'source or IDL reference', 'account-meta table'],
+        exitCriteria: ['owners/signers/writable accounts are named', 'token-program variant is explicit'],
+        riskIfSkipped: 'Findings miss the actual Solana trust boundary and become generic smart-contract advice.',
+      },
+      {
+        id: 'simulate-retain-proof',
+        label: 'Simulate and retain proof',
+        humanCue: 'Convert hypotheses into localnet/devnet simulation plans and retests before asking any wallet to sign.',
+        agentCue: 'Produce expected account diffs, logs, compute units, falsifiers, and approval requirements; do not submit transactions.',
+        actions: ['design dry run', 'capture simulation evidence', 'write finding', 'queue retest'],
+        evidenceRequired: ['simulation plan or log', 'expected vs observed account diff', 'approval receipt if signing is requested', 'retest criteria'],
+        exitCriteria: ['every irreversible action is blocked or receipt-backed', 'findings separate observed proof from hypotheses'],
+        riskIfSkipped: 'The system can accidentally cross from analysis into irreversible on-chain execution.',
+      },
+    ],
+    nextBestActions: ['Apply the Solana guided start', 'Validate public keys', 'Run read-only account lookup', 'Generate a dry-run gate before any signing flow'],
+    stopConditions: ['Cluster or RPC scope is unclear', 'A private key or seed phrase is requested', 'Mainnet value movement is requested without exact human receipt and simulation evidence'],
+  },
   {
     family: 'ai_red_team',
     title: 'AI Agent Boundary Runbook',

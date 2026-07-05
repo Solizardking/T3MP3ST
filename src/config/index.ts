@@ -79,6 +79,17 @@ export interface TempestSettings {
     cleanupOnComplete: boolean;
   };
 
+  // Solana defaults
+  solana: {
+    cluster: 'mainnet-beta' | 'devnet' | 'testnet' | 'localnet';
+    rpcUrl: string;
+    websocketUrl?: string;
+    commitment: 'processed' | 'confirmed' | 'finalized';
+    tokenGateMint?: string;
+    x402GatewayUrl?: string;
+    x402AcceptedMints: string[];
+  };
+
   // UI preferences
   ui: {
     showBanner: boolean;
@@ -137,6 +148,14 @@ const DEFAULT_SETTINGS: TempestSettings = {
     level: 'covert',
     maxDetectionEvents: 3,
     cleanupOnComplete: true,
+  },
+
+  solana: {
+    cluster: 'devnet',
+    rpcUrl: 'https://api.devnet.solana.com',
+    websocketUrl: 'wss://api.devnet.solana.com',
+    commitment: 'confirmed',
+    x402AcceptedMints: [],
   },
 
   ui: {
@@ -818,6 +837,16 @@ ANTHROPIC_API_KEY=
 # OpenAI API Key
 # Get your key at: https://platform.openai.com/api-keys
 OPENAI_API_KEY=
+
+# Solana runtime defaults. Read-only RPC is safe by default; signing/value
+# movement must be dry-run first and requires a human receipt.
+T3MP3ST_SOLANA_CLUSTER=devnet
+T3MP3ST_SOLANA_RPC_URL=https://api.devnet.solana.com
+T3MP3ST_SOLANA_WS_URL=wss://api.devnet.solana.com
+T3MP3ST_SOLANA_COMMITMENT=confirmed
+T3MP3ST_SOLANA_TOKEN_GATE_MINT=
+T3MP3ST_X402_GATEWAY_URL=
+T3MP3ST_X402_ACCEPTED_MINTS=
 `;
     writeFileSync(filePath, template);
   }

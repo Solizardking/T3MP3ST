@@ -408,7 +408,7 @@ export class OpGeneral extends EventEmitter<GeneralEvents> {
     prompt += JSON.stringify({
       codename: 'string — creative military-style codename',
       summary: 'string — 2-3 sentence strategic summary',
-      targets: [{ address: 'string', expectedType: 'string (web_application|api|network|host|cloud)', priority: 'number 1-5', rationale: 'string' }],
+      targets: [{ address: 'string', expectedType: 'string (web_application|api|network|host|cloud|solana_program|solana_account|solana_token|solana_rpc)', priority: 'number 1-5', rationale: 'string' }],
       objectives: [{ description: 'string', priority: 'number 1-5', successCriteria: 'string', phase: 'string (reconnaissance|weaponization|delivery|exploitation|installation|command_and_control|actions_on_objectives)' }],
       operators: [{ archetype: 'string (recon|scanner|exploiter|infiltrator|exfiltrator|ghost|coordinator|analyst)', count: 'number', deployPhase: 'string', briefing: 'string' }],
       opsecLevel: 'string (silent|covert|loud)',
@@ -417,7 +417,7 @@ export class OpGeneral extends EventEmitter<GeneralEvents> {
       contingencies: [{ trigger: 'string', action: 'string', priority: 'string (low|medium|high|critical)' }],
       complexity: 'string (trivial|low|moderate|high|extreme)',
       rationale: 'string — 2-4 sentences explaining your strategic reasoning',
-      missionFamily: 'string (web_api|ai_red_team|cloud_infra|smart_contract|code_supply_chain|crypto_secrets|reverse_binary|agent_warfare|social_osint|reporting_remediation)',
+      missionFamily: 'string (web_api|ai_red_team|cloud_infra|solana_onchain|smart_contract|code_supply_chain|crypto_secrets|reverse_binary|agent_warfare|social_osint|reporting_remediation)',
       huntLanes: [{
         family: 'mission family',
         target: 'string',
@@ -480,7 +480,7 @@ Return only a valid JSON object wrapped in a json code block. Keep it compact, c
     prompt += `Build a useful zero-day autohunt OpPlan with these exact top-level keys:\n`;
     prompt += `codename, summary, targets, objectives, operators, opsecLevel, phaseStrategy, roe, contingencies, complexity, rationale, missionFamily, huntLanes, authorityReceipts, evidenceContract, workOrders, toolPlan, critic, learning.\n\n`;
     prompt += `Minimum content:\n`;
-    prompt += `- 4-6 huntLanes across web/API, agent/tool/memory boundaries, supply chain/repo, UI/control plane, learning loop, and cross-domain chains when relevant.\n`;
+    prompt += `- 4-6 huntLanes across web/API, Solana on-chain, agent/tool/memory boundaries, supply chain/repo, UI/control plane, learning loop, and cross-domain chains when relevant.\n`;
     prompt += `- 8-12 workOrders. Each workOrder needs family, title, hypothesis, suspectedBoundary, target, assignedArchetype, kind, safeProbe, expectedSignal, evidenceArtifact, falsifier, retest, requiresReceipt, toolHints, and priority.\n`;
     prompt += `- authorityReceipts must name what needs route preview, model call, command execution, network request, human review, or autonomous execution receipts before action.\n`;
     prompt += `- evidenceContract must define requiredArtifacts, minimumConfidence, provenanceFloor, claimRules, and retestRequired.\n`;
@@ -750,6 +750,7 @@ Return only a valid JSON object wrapped in a json code block. Keep it compact, c
     if (/(agent|delegate|handoff|tool|memory|orchestrator|workflow drift)/.test(text)) push('agent_warfare');
     if (/(repo|dependency|package|npm|pip|github|workflow|ci\/cd|slsa|sbom|secret)/.test(text)) push('code_supply_chain');
     if (/(cloud|aws|gcp|azure|iam|kubernetes|container|terraform)/.test(text)) push('cloud_infra');
+    if (/(solana|spl[-\s]?token|token-2022|anchor|pinocchio|codama|pda|cpi|lamports|program\s*id|mint|phantom|helius|localnet|devnet|mainnet-beta)/.test(text)) push('solana_onchain');
     if (/(contract|solidity|wallet|defi|transaction|token|chain)/.test(text)) push('smart_contract');
     if (/(crypto|key|cipher|hash|signature|jwt|secret|credential)/.test(text)) push('crypto_secrets');
     if (/(binary|reverse|firmware|apk|pwn|ctf|exploit chain)/.test(text)) push('reverse_binary');
@@ -762,7 +763,7 @@ Return only a valid JSON object wrapped in a json code block. Keep it compact, c
   }
 
   private normalizeMissionFamily(value: unknown, fallback?: MissionFamily): MissionFamily | undefined {
-    const families: MissionFamily[] = ['web_api', 'ai_red_team', 'cloud_infra', 'smart_contract', 'code_supply_chain', 'crypto_secrets', 'reverse_binary', 'agent_warfare', 'social_osint', 'reporting_remediation'];
+    const families: MissionFamily[] = ['web_api', 'ai_red_team', 'cloud_infra', 'solana_onchain', 'smart_contract', 'code_supply_chain', 'crypto_secrets', 'reverse_binary', 'agent_warfare', 'social_osint', 'reporting_remediation'];
     const family = String(value || '');
     return families.includes(family as MissionFamily) ? family as MissionFamily : fallback;
   }
@@ -835,6 +836,7 @@ Return only a valid JSON object wrapped in a json code block. Keep it compact, c
       web_api: ['coordinator', 'recon', 'scanner', 'analyst'],
       ai_red_team: ['coordinator', 'ghost', 'analyst'],
       cloud_infra: ['coordinator', 'recon', 'scanner', 'analyst'],
+      solana_onchain: ['coordinator', 'recon', 'scanner', 'analyst'],
       smart_contract: ['coordinator', 'analyst', 'scanner'],
       code_supply_chain: ['coordinator', 'scanner', 'ghost', 'analyst'],
       crypto_secrets: ['coordinator', 'ghost', 'analyst'],
@@ -851,6 +853,7 @@ Return only a valid JSON object wrapped in a json code block. Keep it compact, c
       web_api: 'A harmless endpoint, cached state, and auth assumption compose into a privilege or data-boundary collapse.',
       ai_red_team: 'Untrusted context steers a model/tool/memory boundary while each component appears locally compliant.',
       cloud_infra: 'IAM defaults, metadata, and deployment automation combine into a trust path no owner intended.',
+      solana_onchain: 'Valid signers, writable accounts, PDAs, CPIs, token extensions, and simulation assumptions diverge before a wallet prompt.',
       smart_contract: 'Intent, signing, and contract state diverge across simulation and execution boundaries.',
       code_supply_chain: 'Generated code, dependency trust, and CI permissions compress review into an unsafe release path.',
       crypto_secrets: 'Encoding, token handling, and secret redaction rules disagree about what counts as sensitive.',

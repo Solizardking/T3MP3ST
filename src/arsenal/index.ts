@@ -32,6 +32,17 @@ const dnsReverse = promisify(dns.reverse);
 
 import { CVE_DATABASE } from '../stubs/index.js';
 import type { CVEEntry } from '../stubs/index.js';
+import {
+  SOLANA_OPERATION_GATES,
+  THREE_ONCHAIN_LAWS,
+  callSolanaRpc,
+  createSolanaMissionReceipt,
+  isSolanaAddress,
+  normalizeSolanaCluster,
+  shortenSolanaAddress,
+  solanaConfigFromEnv,
+  solanaExplorerUrl,
+} from '../solana/index.js';
 
 // =============================================================================
 // PORT SCANNING UTILITY
@@ -455,6 +466,196 @@ export function stampSpicyBuiltin(tool: CustomTool): CustomTool {
 }
 
 export const BUILTIN_TOOLS: CustomTool[] = [
+  // =============================================================================
+  // SOLANA-NATIVE READ-ONLY TOOLS
+  // =============================================================================
+  {
+    name: 'solana_address_validate',
+    description: 'Validate a Solana public key/address without making network calls',
+    category: 'solana',
+    parameters: [
+      { name: 'address', type: 'string', description: 'Solana public key, program id, mint, wallet, or account address', required: true },
+      { name: 'cluster', type: 'string', description: 'Solana cluster for explorer links (mainnet-beta, devnet, testnet, localnet)', required: false, default: 'devnet' },
+    ],
+    handler: async (context) => {
+      const address = String(context.parameters.address || '').trim();
+      if (!isSolanaAddress(address)) {
+        return failResult('Invalid Solana address: expected a base58-encoded 32-byte public key');
+      }
+      const cluster = normalizeSolanaCluster(context.parameters.cluster);
+      return successResult([
+        `valid=true`,
+        `address=${shortenSolanaAddress(address)}`,
+        `cluster=${cluster}`,
+        `explorer=${solanaExplorerUrl(address, cluster)}`,
+      ].join('\n'));
+    },
+  },
+  {
+    name: 'solana_rpc_health',
+    description: 'Check Solana JSON-RPC health for a scoped cluster/RPC endpoint',
+    category: 'solana',
+    riskTier: 'passive',
+    parameters: [
+      { name: 'rpcUrl', type: 'string', description: 'Solana RPC URL. Defaults to T3MP3ST_SOLANA_RPC_URL or cluster default.', required: false },
+      { name: 'cluster', type: 'string', description: 'Solana cluster (mainnet-beta, devnet, testnet, localnet)', required: false, default: 'devnet' },
+      { name: 'timeoutMs', type: 'number', description: 'RPC timeout in milliseconds', required: false, default: 10000 },
+    ],
+    handler: async (context) => {
+      const envConfig = solanaConfigFromEnv();
+      const cluster = normalizeSolanaCluster(context.parameters.cluster, envConfig.cluster);
+      const rpcUrl = String(context.parameters.rpcUrl || envConfig.rpcUrl);
+      const timeoutMs = Number(context.parameters.timeoutMs || 10000);
+      try {
+        const health = await callSolanaRpc<string>(rpcUrl, 'getHealth', [], timeoutMs);
+        if (health.error) return failResult(`Solana RPC health failed: ${health.error.message}`);
+        return successResult(`Solana RPC health for ${cluster} (${rpcUrl}): ${String(health.result || 'unknown')}`);
+      } catch (error) {
+        return failResult(`Solana RPC health failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    },
+  },
+  {
+    name: 'solana_account_lookup',
+    description: 'Read Solana account metadata by public key; account data is summarized, not copied',
+    category: 'solana',
+    riskTier: 'passive',
+    parameters: [
+      { name: 'address', type: 'string', description: 'Solana account, wallet, mint, or program address', required: true },
+      { name: 'rpcUrl', type: 'string', description: 'Solana RPC URL. Defaults to T3MP3ST_SOLANA_RPC_URL or cluster default.', required: false },
+      { name: 'cluster', type: 'string', description: 'Solana cluster (mainnet-beta, devnet, testnet, localnet)', required: false, default: 'devnet' },
+      { name: 'commitment', type: 'string', description: 'RPC commitment (processed, confirmed, finalized)', required: false, default: 'confirmed' },
+      { name: 'timeoutMs', type: 'number', description: 'RPC timeout in milliseconds', required: false, default: 10000 },
+    ],
+    handler: async (context) => {
+      const address = String(context.parameters.address || '').trim();
+      if (!isSolanaAddress(address)) {
+        return failResult('Invalid Solana address: expected a base58-encoded 32-byte public key');
+      }
+      const envConfig = solanaConfigFromEnv();
+      const cluster = normalizeSolanaCluster(context.parameters.cluster, envConfig.cluster);
+      const rpcUrl = String(context.parameters.rpcUrl || envConfig.rpcUrl);
+      const commitment = String(context.parameters.commitment || envConfig.commitment);
+      const timeoutMs = Number(context.parameters.timeoutMs || 10000);
+      type AccountInfo = {
+        value: null | {
+          lamports: number;
+          owner: string;
+          executable: boolean;
+          rentEpoch?: number;
+          data?: [string, string] | string[];
+        };
+      };
+      try {
+        const account = await callSolanaRpc<AccountInfo>(
+          rpcUrl,
+          'getAccountInfo',
+          [address, { encoding: 'base64', commitment }],
+          timeoutMs,
+        );
+        if (account.error) return failResult(`Solana account lookup failed: ${account.error.message}`);
+        const value = account.result?.value;
+        if (!value) {
+          return successResult(`Solana account ${shortenSolanaAddress(address)} was not found on ${cluster}.`);
+        }
+        const dataLength = Array.isArray(value.data) && typeof value.data[0] === 'string'
+          ? Buffer.from(value.data[0], 'base64').length
+          : 0;
+        return successResult([
+          `Solana account ${shortenSolanaAddress(address)} on ${cluster}`,
+          `owner=${value.owner}`,
+          `lamports=${value.lamports}`,
+          `executable=${value.executable}`,
+          `rentEpoch=${value.rentEpoch ?? 'n/a'}`,
+          `dataLength=${dataLength} bytes (content redacted)`,
+          `explorer=${solanaExplorerUrl(address, cluster)}`,
+        ].join('\n'));
+      } catch (error) {
+        return failResult(`Solana account lookup failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    },
+  },
+  {
+    name: 'solana_program_audit_plan',
+    description: 'Generate a Solana program audit checklist for Anchor, Pinocchio, Codama, SPL Token, and Token-2022 surfaces',
+    category: 'solana',
+    parameters: [
+      { name: 'programId', type: 'string', description: 'Optional Solana program id to include in the plan', required: false },
+      { name: 'framework', type: 'string', description: 'Program framework: anchor, pinocchio, native, unknown', required: false, default: 'unknown' },
+      { name: 'tokenProgram', type: 'string', description: 'Token program variant: spl-token, token-2022, both, none, unknown', required: false, default: 'unknown' },
+    ],
+    handler: async (context) => {
+      const programId = String(context.parameters.programId || '').trim();
+      if (programId && !isSolanaAddress(programId)) {
+        return failResult('Invalid Solana program id: expected a base58-encoded 32-byte public key');
+      }
+      const framework = String(context.parameters.framework || 'unknown');
+      const tokenProgram = String(context.parameters.tokenProgram || 'unknown');
+      const scopeLine = programId ? `Program: ${shortenSolanaAddress(programId)}` : 'Program: not provided';
+      return successResult([
+        scopeLine,
+        `Framework: ${framework}`,
+        `Token surface: ${tokenProgram}`,
+        '',
+        'Audit plan:',
+        '1. Verify every signer, writable account, PDA seed, bump, owner, and executable account constraint.',
+        '2. Check Anchor account constraints or native account parsers for substitution, confused-deputy, and remaining-account abuse.',
+        '3. Validate CPI targets, authority handoffs, close/realloc behavior, lamport drains, and rent edge cases.',
+        '4. Review arithmetic, token decimal assumptions, oracle freshness, slippage, fee math, and rounding direction.',
+        '5. For SPL Token/Token-2022, enumerate extensions, transfer hooks, freeze/mint authorities, permanent delegates, and confidential-transfer assumptions.',
+        '6. Require LiteSVM/Mollusk unit tests plus Surfpool or local validator integration tests for stateful flows.',
+        '7. Record compute budget and priority-fee assumptions before any simulated or signed transaction.',
+        '',
+        `On-chain laws: ${THREE_ONCHAIN_LAWS.map(law => law.title).join(' | ')}`,
+      ].join('\n'));
+    },
+  },
+  {
+    name: 'solana_transaction_dry_run_plan',
+    description: 'Create a no-signing Solana transaction dry-run and approval gate plan',
+    category: 'solana',
+    parameters: [
+      { name: 'intent', type: 'string', description: 'Human-readable transaction intent', required: true },
+      { name: 'target', type: 'string', description: 'Program/account/mint involved in the action', required: false },
+      { name: 'accounts', type: 'array', description: 'Expected public keys touched by the transaction', required: false },
+      { name: 'valueMovement', type: 'boolean', description: 'Whether the action can move funds/tokens or change authorities', required: false, default: false },
+    ],
+    handler: async (context) => {
+      const intent = String(context.parameters.intent || '').trim();
+      if (!intent) return failResult('Transaction intent is required');
+      const target = String(context.parameters.target || context.target?.address || 'unspecified-target').trim();
+      const accounts = Array.isArray(context.parameters.accounts) ? context.parameters.accounts : [];
+      const invalidAccounts = accounts
+        .map(account => String(account))
+        .filter(account => account && !isSolanaAddress(account));
+      if (invalidAccounts.length) {
+        return failResult(`Invalid Solana account(s): ${invalidAccounts.join(', ')}`);
+      }
+      const valueMovement = Boolean(context.parameters.valueMovement);
+      const receipt = createSolanaMissionReceipt({
+        missionId: context.mission || 'unscoped',
+        action: 'solana_transaction_dry_run_plan',
+        target,
+        reason: intent,
+        readonly: !valueMovement,
+      });
+      return successResult([
+        `intent=${intent}`,
+        `target=${target}`,
+        `valueMovement=${valueMovement}`,
+        `receiptHash=${receipt}`,
+        '',
+        'Required gates before signing:',
+        ...SOLANA_OPERATION_GATES.map(gate => `- ${gate}`),
+        '',
+        'Dry-run checklist:',
+        '- Build the transaction with explicit fee payer, recent blockhash, compute budget, priority fee, account metas, and expected signers.',
+        '- Simulate on the scoped cluster and capture logs, units consumed, account diffs, and return data.',
+        '- Confirm no unexpected writable accounts, owner changes, token authority changes, lamport drains, or CPI targets appear.',
+        '- Present the simulation summary to the human operator before any wallet prompt.',
+      ].join('\n'));
+    },
+  },
   // =============================================================================
   // RECONNAISSANCE TOOLS
   // =============================================================================

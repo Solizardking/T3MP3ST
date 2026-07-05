@@ -226,6 +226,13 @@ export class TargetEnvironment extends EventEmitter<TargetEvents> {
       mobile: 0,
       iot: 0,
       container: 0,
+      solana_program: 0,
+      solana_account: 0,
+      solana_token: 0,
+      solana_wallet: 0,
+      solana_validator: 0,
+      solana_rpc: 0,
+      solana_transaction: 0,
     };
 
     const byStatus: Record<TargetStatus, number> = {
@@ -349,3 +356,10 @@ export function createDMZArchitecture(): Target[] {
     },
   ];
 }
+
+export {
+  createSolanaAccountTarget,
+  createSolanaProgramTarget,
+  createSolanaRpcTarget,
+  createSolanaTokenTarget,
+} from '../solana/index.js';

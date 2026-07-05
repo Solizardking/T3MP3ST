@@ -435,7 +435,7 @@ function clientLedgerId(value: unknown, prefix: string): string {
 type TempestMode = 'standalone' | 't3mp3st';
 type DraftStatus = 'draft' | 'queued' | 'launched' | 'archived';
 type DraftSource = 'human' | 'agent' | 't3mp3st';
-type MissionFamily = 'web_api' | 'ai_red_team' | 'cloud_infra' | 'smart_contract' | 'code_supply_chain' | 'crypto_secrets' | 'reverse_binary' | 'agent_warfare' | 'social_osint' | 'reporting_remediation';
+type MissionFamily = 'web_api' | 'ai_red_team' | 'cloud_infra' | 'solana_onchain' | 'smart_contract' | 'code_supply_chain' | 'crypto_secrets' | 'reverse_binary' | 'agent_warfare' | 'social_osint' | 'reporting_remediation';
 type OperationMode = 'wizard' | 'agent_harness' | 'expert_console' | 'range' | 'review_only';
 type GuardAction = 'command_execution' | 'network_request' | 'mission_execution' | 'autonomous_execution' | 'model_call';
 type ApprovalStatus = 'pending' | 'approved' | 'rejected' | 'expired';
@@ -946,7 +946,7 @@ function clampConfidence(value: unknown): number {
 
 function normalizeMissionFamily(value: unknown, fallback: MissionFamily = 'web_api'): MissionFamily {
   const family = String(value || '');
-  const families: MissionFamily[] = ['web_api', 'ai_red_team', 'cloud_infra', 'smart_contract', 'code_supply_chain', 'crypto_secrets', 'reverse_binary', 'agent_warfare', 'social_osint', 'reporting_remediation'];
+  const families: MissionFamily[] = ['web_api', 'ai_red_team', 'cloud_infra', 'solana_onchain', 'smart_contract', 'code_supply_chain', 'crypto_secrets', 'reverse_binary', 'agent_warfare', 'social_osint', 'reporting_remediation'];
   return families.includes(family as MissionFamily) ? family as MissionFamily : fallback;
 }
 
@@ -1168,6 +1168,7 @@ function routeFamilyForDraft(draft: MissionDraft): MissionFamily {
   const text = `${draft.title} ${draft.objective}`.toLowerCase();
   if (/(ai\s*red|red[-\s]?team|adversarial\s+ai|agent|prompt|model|rag|jailbreak|llm)/.test(text)) return 'ai_red_team';
   if (/(cloud|aws|gcp|azure|iam|container|kubernetes|ci\/cd|pipeline)/.test(text)) return 'cloud_infra';
+  if (/(solana|spl[-\s]?token|token-2022|anchor|pinocchio|codama|pda|cpi|lamports|program\s*id|mint|phantom|helius|localnet|devnet|mainnet-beta)/.test(text)) return 'solana_onchain';
   if (/(contract|solidity|token|defi|transaction|wallet)/.test(text)) return 'smart_contract';
   if (/(repo|dependency|secret|supply|code|github|gitlab)/.test(text)) return 'code_supply_chain';
   if (/(crypto|key|encoding|cipher|steg)/.test(text)) return 'crypto_secrets';
@@ -1183,6 +1184,7 @@ function familyOperators(family: MissionFamily): string[] {
     web_api: ['coordinator', 'recon', 'scanner', 'analyst'],
     ai_red_team: ['coordinator', 'analyst', 'ghost'],
     cloud_infra: ['coordinator', 'recon', 'scanner', 'analyst'],
+    solana_onchain: ['coordinator', 'recon', 'scanner', 'analyst'],
     smart_contract: ['coordinator', 'analyst'],
     code_supply_chain: ['coordinator', 'analyst', 'scanner'],
     crypto_secrets: ['analyst', 'ghost'],
@@ -1693,6 +1695,7 @@ function workOrderSquadForFamily(family: MissionFamily): string {
     web_api: 'web-api',
     ai_red_team: 'ai-agent',
     cloud_infra: 'infra-cloud',
+    solana_onchain: 'solana-onchain',
     smart_contract: 'crypto-contract',
     code_supply_chain: 'packages',
     crypto_secrets: 'crypto-secrets',
@@ -2724,6 +2727,18 @@ function pressureProfileForFamily(family: MissionFamily): {
       defense: 'Emit deny-by-default policy tests, exposure monitors, and least-privilege diffs.',
       strangeRoute: 'Two individually acceptable grants compose into an authority bridge no owner expected.',
       toolHints: ['prowler', 'cloudsplaining', 'terraform-compliance', 'checkov', 'opa'],
+    },
+    solana_onchain: {
+      specialist: 'Solana account-meta sentinel',
+      pressureQuestion: 'Can valid signers, writable accounts, PDAs, CPIs, token extensions, and wallet intent compose into unintended value or authority movement?',
+      capability: 'signer, PDA, CPI, token-authority, or simulation-boundary pressure',
+      entry: 'Replay the claim through read-only RPC metadata, source/IDL review, and localnet/devnet simulation only.',
+      control: 'Name the cluster, RPC endpoint, program/account ids, signer set, writable accounts, token program variant, and expected account diffs.',
+      pivot: 'Search for one extra legal CPI, remaining account, PDA seed, or Token-2022 extension that changes the security invariant.',
+      impact: 'Rehearse value or authority movement with toy balances on localnet/devnet; mainnet remains read-only by default.',
+      defense: 'Add signer/owner/writable constraints, invariant tests, simulation gates, and wallet-intent approval receipts.',
+      strangeRoute: 'The bug is not a transaction alone; it is a mismatch between simulated intent and the account metas a wallet is asked to sign.',
+      toolHints: ['solana_address_validate', 'solana_account_lookup', 'solana_program_audit_plan', 'solana_transaction_dry_run_plan', 'anchor', 'litesvm'],
     },
     smart_contract: {
       specialist: 'economic invariant breaker',
@@ -4500,6 +4515,7 @@ function buildArsenalPlan(params: Record<string, unknown>): Record<string, unkno
     api: 5,
     vulnerability: 6,
     supply_chain: 3,
+    solana: 3,
     smart_contract: 3,
     crypto: 3,
     fuzzing: 4,
@@ -5415,7 +5431,7 @@ app.post('/api/findings', (req: Request, res: Response) => {
     id: clientLedgerId(body.id, 'finding'),
     missionId: typeof body.missionId === 'string' ? body.missionId : undefined,
     operationId: typeof body.operationId === 'string' ? body.operationId : undefined,
-    family: ['web_api', 'ai_red_team', 'cloud_infra', 'smart_contract', 'code_supply_chain', 'crypto_secrets', 'reverse_binary', 'agent_warfare', 'social_osint', 'reporting_remediation'].includes(String(body.family))
+    family: ['web_api', 'ai_red_team', 'cloud_infra', 'solana_onchain', 'smart_contract', 'code_supply_chain', 'crypto_secrets', 'reverse_binary', 'agent_warfare', 'social_osint', 'reporting_remediation'].includes(String(body.family))
       ? body.family as MissionFamily
       : 'web_api',
     title: typeof body.title === 'string' && body.title.trim() ? redactLedgerText(body.title.trim(), 240) : 'Untitled finding',
