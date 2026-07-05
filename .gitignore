@@ -22,6 +22,12 @@ bench/xbow/challenges/
 !.env.example
 *.pem
 *.key
+id.json
+*.keypair.json
+*.wallet.json
+*.seed.json
+.config/solana/
+solana-keypair*.json
 # logs + python caches + os cruft
 *.log
 **/__pycache__/

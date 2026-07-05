@@ -1,5 +1,12 @@
 # T3MP3ST CTF Execution Infrastructure
 
+This is legacy CTF execution infrastructure retained for regression and training.
+It is not the primary Solana-native surface.
+
+Future Solana ranges should use localnet/devnet fixtures, Anchor/Pinocchio
+programs, LiteSVM/Mollusk tests, Surfpool/forked-state scenarios, and explicit
+no-mainnet-submit gates.
+
 Execution-based benchmarking system for validating AI agent cyber capabilities through real CTF challenges with flag-based verification.
 
 ## Architecture

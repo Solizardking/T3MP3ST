@@ -5,7 +5,9 @@
 # challenges (host has no linux/amd64 tooling), and it is the portable home of the FULL arsenal.
 #
 # "+" over stock Kali = the AI-native / frontier tooling Kali doesn't ship (the ProjectDiscovery
-# Go suite, smart-contract analyzers, semgrep). It also satisfies scripts/check-tools-image.sh:
+# Go suite, smart-contract analyzers, semgrep). Solana CLI/Anchor/LiteSVM/Surfpool
+# are intentionally not installed here yet; Solana adapters are catalog-only until
+# narrow no-submit templates exist. It also satisfies scripts/check-tools-image.sh:
 # radare2/gdb/objdump/upx + python {z3,sympy,pwn,fpylll,Crypto} + pip-audit.
 #
 # Build:   npm run tools:build           (== bash tools/build.sh)

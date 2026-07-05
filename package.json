@@ -1,7 +1,7 @@
 {
   "name": "t3mp3st",
   "version": "1.0.0",
-  "description": "Tactical Execution Multi-agent Platform for Elite Security Testing",
+  "description": "Solana-native multi-agent harness for on-chain security review, read-only RPC evidence, simulation gates, and defensive agent operations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -70,6 +70,7 @@
     "test:lessons": "node scripts/lessons.mjs --self-test",
     "test:no-self-fitting": "node scripts/test-no-self-fitting.mjs",
     "test:no-phantom-tools": "vitest run src/__tests__/no-phantom-tools.test.ts",
+    "test:solana": "vitest run src/__tests__/solana.test.ts",
     "test:spine-live": "vitest run src/__tests__/spine-live.test.ts",
     "smoke": "node scripts/smoke.mjs",
     "smoke:live": "node scripts/smoke.mjs --live",
@@ -85,6 +86,11 @@
     "penetration-testing",
     "security",
     "red-team",
+    "solana",
+    "blockchain",
+    "onchain",
+    "spl-token",
+    "anchor",
     "multi-agent",
     "ai",
     "llm"

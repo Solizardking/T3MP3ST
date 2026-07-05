@@ -17,6 +17,21 @@ pwntools, pycryptodome, sympy, z3-solver, fpylll, numpy/scipy, UPX, etc. — is 
 from upstream package repositories at image-build time under each package's own license;
 none of it is vendored into this repository.
 
+Solana-related tools and frameworks referenced by the catalog are not vendored
+into this repository:
+
+| Tool / Framework | Used by | Bundled here? |
+|---|---|---|
+| Solana CLI | catalog-only Solana readiness | No |
+| SPL Token CLI | catalog-only token inspection readiness | No |
+| Anchor | catalog-only program build/test readiness | No |
+| Codama | catalog-only typed client/IDL generation readiness | No |
+| LiteSVM / Mollusk | planned local Solana test harnesses | No |
+| Surfpool | planned forked-state Solana integration testing | No |
+
+Install and license obligations for those tools remain with their upstream
+projects and with the operator's local environment.
+
 No third-party code is bundled into the published AGPL-3.0 core (the CVE-Zero fixtures ship
 only our own `ground-truth.json` annotations; upstream repo source is stripped at export and
 fetched on demand). If you believe an attribution is missing or incorrect, please open an issue.

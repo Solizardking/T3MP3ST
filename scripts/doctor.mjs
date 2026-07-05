@@ -70,6 +70,10 @@ async function main() {
     'README.md',
     'SECURITY.md',
     'CONTRIBUTING.md',
+    'CONSTITUTION.md',
+    'CLAWD.md',
+    'three-laws.md',
+    'docs/SOLANA_NATIVE.md',
     'docs/index.html',
     'docs/TEAM_PREVIEW.md',
     'docs/ARSENAL_ACTIVATION_PLAN.md',
@@ -95,6 +99,8 @@ async function main() {
     ['nuclei', 'optional high-value scanner'],
     ['semgrep', 'optional supply-chain scanner'],
     ['promptfoo', 'optional AI eval runner'],
+    ['solana', 'optional Solana CLI; catalog-only until no-submit adapters are wired'],
+    ['anchor', 'optional Anchor CLI for local Solana program work'],
   ];
   for (const [binary, detail] of commandChecks) {
     const path = await commandPath(binary);

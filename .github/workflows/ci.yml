@@ -1,4 +1,4 @@
-name: T3MP3ST CI
+name: T3MP3ST Solana CI
 
 on:
   pull_request:
@@ -18,6 +18,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run test:solana
       - run: npm test
       - run: npm run doctor
       # Honesty gates: prove the headline numbers re-derive and that no

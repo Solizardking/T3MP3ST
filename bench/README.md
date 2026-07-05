@@ -1,5 +1,12 @@
 # Benchmark artifacts
 
+These are legacy web/CTF/CVE benchmark artifacts retained for regression and
+historical reproducibility. They are not Solana-specific benchmarks.
+
+Solana benchmark coverage should be added separately for signer/owner/writable
+constraint detection, PDA/CPI confusion, Token-2022 extension handling,
+simulation gates, and remediation/retest quality.
+
 Every headline number in the top-level README re-derives from the committed result
 JSONs in this directory. Run `npm run verify-claims` from the repo root — it recomputes
 each claim from these files under a provenance-strict scorer and fails if any number

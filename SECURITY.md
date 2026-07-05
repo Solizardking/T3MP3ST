@@ -27,7 +27,9 @@ If you discover a security vulnerability in T3MP3ST, please report it responsibl
 
 ### Authorized Use Only
 
-T3MP3ST is a security testing framework designed for **authorized penetration testing and red team operations only**. Before using this tool:
+T3MP3ST is a Solana-native security testing and agent harness designed for
+**authorized** on-chain review, source review, simulation, and defensive testing
+only. Before using this tool:
 
 - Obtain explicit written authorization from the system owner
 - Define clear scope and rules of engagement
@@ -36,6 +38,20 @@ T3MP3ST is a security testing framework designed for **authorized penetration te
 
 See [docs/SCOPE_AND_AUTHORIZATION.md](docs/SCOPE_AND_AUTHORIZATION.md) for the working model used by the API and UI: human intent, scope receipts, tool gates, evidence, findings, retests, and accepted memory.
 
+### Solana-Specific Rules
+
+- Mainnet is read-only unless a mission contract and human receipt explicitly
+  authorize the exact action.
+- Never enter private keys, seed phrases, raw wallet secrets, or custodial
+  credentials into the harness.
+- Simulate before signing. Record expected account diffs, logs, compute units,
+  and signers before any wallet prompt.
+- Human approval is required before value movement, authority changes,
+  governance actions, token launches, or CPI-triggering live execution.
+- Do not front-run, sandwich, fake volume, manipulate governance, rugpull, or
+  fragment liquidity.
+- Distinguish SPL Token and Token-2022 behavior explicitly.
+
 ### API Key Security
 
 - Never commit API keys to version control
@@ -43,9 +59,10 @@ See [docs/SCOPE_AND_AUTHORIZATION.md](docs/SCOPE_AND_AUTHORIZATION.md) for the w
 - Rotate API keys regularly
 - Use separate keys for development and production
 
-### Payload Database
+### Legacy Payload Database
 
-The framework includes comprehensive payload databases for educational and testing purposes:
+The legacy web/security harness still includes payload databases for educational
+and authorized testing purposes:
 
 - SQL injection payloads
 - XSS payloads
@@ -64,6 +81,8 @@ These payloads are intended for:
 When using T3MP3ST:
 
 - Do not exfiltrate real sensitive data
+- Do not copy raw Solana account data when metadata is sufficient
+- Redact wallet metadata and user prompts unless disclosure is required by the mission
 - Use test/dummy data for demonstrations
 - Properly dispose of any captured credentials after testing
 - Follow data protection regulations (GDPR, CCPA, etc.)
@@ -85,7 +104,7 @@ runtime regardless. Maintainers should re-run `npm audit` before each release ta
 
 ### Real Functionality
 
-All core arsenal tools perform **real operations** (not simulations):
+Several legacy arsenal tools perform **real operations** (not simulations):
 
 | Tool | Implementation |
 |------|----------------|
@@ -102,6 +121,11 @@ All core arsenal tools perform **real operations** (not simulations):
 | Hash cracking | Real dictionary attacks using `crypto` module |
 
 **Note:** Only use these tools against systems you have explicit authorization to test.
+
+Solana-native tools are read-only or planning-only today. `solana_rpc_health` and
+`solana_account_lookup` make real JSON-RPC calls, but they do not sign or submit
+transactions. `solana_transaction_dry_run_plan` creates a gate plan; it does not
+execute the transaction.
 
 ## Security Best Practices
 

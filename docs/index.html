@@ -3837,6 +3837,7 @@
                                         <option value="web_api">Web / API</option>
                                         <option value="ai_red_team">AI red team</option>
                                         <option value="cloud_infra">Cloud / infra</option>
+                                        <option value="solana_onchain">Solana on-chain</option>
                                         <option value="smart_contract">Smart contracts</option>
                                         <option value="code_supply_chain">Code / supply chain</option>
                                         <option value="crypto_secrets">Crypto / secrets</option>
@@ -5556,7 +5557,7 @@
                             <div class="feature-card"><div class="feature-icon">🔌</div><h3>Network / Infra ✅</h3><p>Live recon engine (nmap/DNS/HTTP). Lateral + privesc experimental.</p></div>
                             <div class="feature-card"><div class="feature-icon">🤖</div><h3>Embedded / IoT / OT ✅</h3><p>Firmware, robotics, ICS/SCADA. Coordinated-disclosure CVE pipeline live.</p></div>
                             <div class="feature-card"><div class="feature-icon">📦</div><h3>Supply chain ⚠️</h3><p>Dependency audits, install-without-confirmation. Dedicated class; real held-out hit.</p></div>
-                            <div class="feature-card"><div class="feature-icon">💰</div><h3>Blockchain ⚠️</h3><p>Smart contracts, DeFi, Solidity. Reproduction only — not novel discovery yet.</p></div>
+                            <div class="feature-card"><div class="feature-icon">💰</div><h3>Solana ⚠️</h3><p>Programs, accounts, SPL Token, Token-2022, PDA/CPI review, and simulation-before-signing gates.</p></div>
                             <div class="feature-card" style="opacity: .42; filter: grayscale(1); position: relative;"><div class="feature-icon">☁️</div><h3>Cloud <span style="font-size:9px; background:rgba(245,184,75,.18); color:#f5b84b; padding:2px 6px; border-radius:4px; vertical-align:middle;">COMING SOON</span></h3><p>AWS/GCP/Azure misconfig, IAM, serverless.</p></div>
                             <div class="feature-card" style="opacity: .42; filter: grayscale(1); position: relative;"><div class="feature-icon">📱</div><h3>Mobile <span style="font-size:9px; background:rgba(245,184,75,.18); color:#f5b84b; padding:2px 6px; border-radius:4px; vertical-align:middle;">COMING SOON</span></h3><p>Android / iOS app security.</p></div>
                             <div class="feature-card" style="opacity: .42; filter: grayscale(1); position: relative;"><div class="feature-icon">🏢</div><h3>Identity / AD <span style="font-size:9px; background:rgba(245,184,75,.18); color:#f5b84b; padding:2px 6px; border-radius:4px; vertical-align:middle;">COMING SOON</span></h3><p>Kerberos, pass-the-hash, Active Directory.</p></div>
@@ -21405,6 +21406,7 @@ Be specific and actionable. Format as structured JSON.`;
             web_api: 'Web / API',
             ai_red_team: 'AI red team',
             cloud_infra: 'Cloud / infra',
+            solana_onchain: 'Solana on-chain',
             smart_contract: 'Smart contracts',
             code_supply_chain: 'Code / supply chain',
             crypto_secrets: 'Crypto / secrets',
@@ -21415,6 +21417,15 @@ Be specific and actionable. Format as structured JSON.`;
         };
 
         let plinyWorkflowPresets = [
+            {
+                id: 'starter-solana-onchain',
+                label: 'I have a Solana program or token',
+                plainLanguage: 'Review a Solana program, account, mint, or transaction flow with read-only RPC and simulation gates.',
+                family: 'solana_onchain',
+                route: 'lanes',
+                directive: 'Authorized Solana on-chain review. Identify cluster, RPC endpoint, program/account/mint scope, signer and writable-account assumptions, SPL Token or Token-2022 surface, PDA/CPI risks, and dry-run requirements. Do not sign, submit, or move value without explicit human receipts.',
+                recommendedResources: ['solana-program-security', 'spl-token-docs', 'token-2022-docs', 'anchor-docs']
+            },
             {
                 id: 'starter-owned-web-app',
                 label: 'I own a web app',
@@ -21463,6 +21474,10 @@ Be specific and actionable. Format as structured JSON.`;
         ];
 
         let plinyResourcePacks = [
+            { id: 'solana-program-security', title: 'Solana Program Security', authority: 'Solana Foundation', url: 'https://solana.com/developers/courses/program-security', sourceType: 'methodology', missionFamilies: ['solana_onchain', 'code_supply_chain', 'reporting_remediation'], useWhen: 'Review signer, owner, PDA, CPI, account validation, arithmetic, and state-transition flaws.', caution: 'Verify every claim with source, RPC metadata, or simulation evidence.' },
+            { id: 'spl-token-docs', title: 'SPL Token Program', authority: 'Solana Program Library', url: 'https://spl.solana.com/token', sourceType: 'framework', missionFamilies: ['solana_onchain', 'crypto_secrets', 'reporting_remediation'], useWhen: 'Review token mints, token accounts, mint/freeze authorities, delegates, and token movement.', caution: 'Capture cluster, slot, RPC endpoint, and timestamp.' },
+            { id: 'token-2022-docs', title: 'Token-2022 Extensions', authority: 'Solana Program Library', url: 'https://spl.solana.com/token-2022', sourceType: 'framework', missionFamilies: ['solana_onchain', 'crypto_secrets', 'reporting_remediation'], useWhen: 'Review transfer hooks, permanent delegates, fees, metadata, and confidential-transfer assumptions.', caution: 'Never assume SPL Token and Token-2022 semantics are interchangeable.' },
+            { id: 'anchor-docs', title: 'Anchor Framework', authority: 'Anchor', url: 'https://www.anchor-lang.com/docs', sourceType: 'framework', missionFamilies: ['solana_onchain', 'code_supply_chain', 'reporting_remediation'], useWhen: 'Review Anchor account constraints, IDLs, generated clients, and tests.', caution: 'Verify generated IDLs against source and deployed ids.' },
             { id: 'mitre-attack-enterprise', title: 'MITRE ATT&CK Enterprise', authority: 'MITRE', url: 'https://attack.mitre.org/matrices/enterprise/', sourceType: 'framework', missionFamilies: ['web_api', 'cloud_infra', 'code_supply_chain', 'agent_warfare', 'social_osint', 'reporting_remediation'], useWhen: 'Map enterprise tactics, techniques, mitigations, and defensive coverage.', caution: 'Use technique labels as context, not permission to execute.' },
             { id: 'mitre-atlas', title: 'MITRE ATLAS', authority: 'MITRE', url: 'https://atlas.mitre.org/', sourceType: 'framework', missionFamilies: ['ai_red_team', 'agent_warfare', 'reporting_remediation'], useWhen: 'Structure AI/ML threat modeling, AI incidents, and agentic boundary tests.', caution: 'Pair labels with concrete evidence and scope receipts.' },
             { id: 'owasp-wstg', title: 'OWASP WSTG', authority: 'OWASP', url: 'https://owasp.org/www-project-web-security-testing-guide/v42/', sourceType: 'methodology', missionFamilies: ['web_api', 'reporting_remediation'], useWhen: 'Build a web-app test plan and evidence checklist.', caution: 'Prefer passive/read-only review until approval allows active testing.' },
@@ -21479,6 +21494,7 @@ Be specific and actionable. Format as structured JSON.`;
         ];
 
         let plinyPromptPacks = [
+            { id: 'prompt-solana-onchain-sentinel', title: 'Solana On-Chain Sentinel', family: 'solana_onchain', roleFrame: 'Review Solana programs, accounts, mints, wallets, and transaction intents with cluster/RPC clarity and simulation-before-signing discipline.', evidenceContract: ['cluster and RPC endpoint', 'public key and role', 'owner/executable/token metadata', 'simulation log or gap'] },
             { id: 'prompt-ai-boundary-cartographer', title: 'AI Boundary Cartographer', family: 'ai_red_team', roleFrame: 'Map model, prompt, tool, memory, retrieval, and autonomy boundaries with receipts.', evidenceContract: ['mission scope', 'prompt transcript', 'tool authority observed', 'retest criteria'] },
             { id: 'prompt-web-api-operator', title: 'Web/API Operator', family: 'web_api', roleFrame: 'Turn an owned web/API surface into scoped tests, proof, fixes, and retests.', evidenceContract: ['endpoint', 'request/response artifact', 'impact', 'fix acceptance criteria'] },
             { id: 'prompt-repo-supply-chain-sentinel', title: 'Supply-Chain Sentinel', family: 'code_supply_chain', roleFrame: 'Assess repository trust, dependencies, secrets exposure, CI/CD, provenance, and release hygiene.', evidenceContract: ['file or workflow path', 'tool output', 'secret redaction note', 'owner action'] },
@@ -21569,6 +21585,7 @@ Be specific and actionable. Format as structured JSON.`;
             { id: 'ai_agent', label: 'AI/Agent', families: ['ai_red_team', 'agent_warfare'], focus: 'tools, memory, prompts' },
             { id: 'packages', label: 'Packages', families: ['code_supply_chain'], focus: 'deps, secrets, release trust' },
             { id: 'infra', label: 'Infra/Cloud', families: ['cloud_infra'], focus: 'identity, services, exposure' },
+            { id: 'solana', label: 'Solana', families: ['solana_onchain'], focus: 'programs, PDAs, CPIs, tokens' },
             { id: 'crypto', label: 'Crypto', families: ['crypto_secrets', 'smart_contract'], focus: 'keys, contracts, protocols' },
             { id: 'reverse', label: 'Reverse', families: ['reverse_binary'], focus: 'binaries, firmware, formats' },
             { id: 'osint', label: 'OSINT', families: ['social_osint'], focus: 'people, assets, public signals' },
@@ -22246,6 +22263,7 @@ Be specific and actionable. Format as structured JSON.`;
 
             const activeFamilies = activePlinyFamilies(family);
             if (family === 'agent_warfare') activeFamilies.add('ai_red_team');
+            if (family === 'solana_onchain') activeFamilies.add('crypto_secrets');
             if (family === 'smart_contract') activeFamilies.add('crypto_secrets');
             if (family === 'reporting_remediation') ['web_api', 'ai_red_team', 'code_supply_chain', 'cloud_infra'].forEach(item => activeFamilies.add(item));
             let leadCount = 0;
@@ -24089,6 +24107,7 @@ Be specific and actionable. Format as structured JSON.`;
                 /ai\s*red|red[-\s]?team|adversarial\s+ai|prompt|model|rag|jailbreak|llm/i.test(directive) ? 'ai_red_team' :
                 /cloud|aws|gcp|azure|iam|kubernetes|container|pipeline/i.test(directive) ? 'cloud_infra' :
                 /agent|tool|memory|orchestrator|harness/i.test(directive) ? 'agent_warfare' :
+                /solana|spl[-\s]?token|token-2022|anchor|pinocchio|codama|pda|cpi|lamports|program\s*id|mint|phantom|helius|localnet|devnet|mainnet-beta/i.test(directive) ? 'solana_onchain' :
                 /contract|solidity|token|defi/i.test(directive) ? 'smart_contract' :
                 /repo|dependency|code|supply|ci\/cd/i.test(directive) ? 'code_supply_chain' :
                 /crypto|secret|key|cipher|steg/i.test(directive) ? 'crypto_secrets' :
@@ -24928,7 +24947,7 @@ Be specific and actionable. Format as structured JSON.`;
     { id:'web',      icon:'🌐', label:'Web app / API',        ph:'https://app.example.com',                 obj:'Find and verify exploitable web/API vulnerabilities' },
     { id:'network',  icon:'🖧', label:'Network host / IP',     ph:'10.0.0.5   ·   host.example.com',           obj:'Find and verify exploitable services on this host' },
     { id:'repo',     icon:'📦', label:'Source repo / package', ph:'github.com/org/repo   ·   npm / pypi pkg',  obj:'Find and verify 0-days in this codebase / dependency' },
-    { id:'contract', icon:'📜', label:'Smart contract',        ph:'0x…   ·   github.com/org/contracts',         obj:'Audit this smart contract for exploitable vulnerabilities' },
+    { id:'contract', icon:'📜', label:'Solana program / token', ph:'program id   ·   mint   ·   Anchor repo',    obj:'Review this Solana target with read-only RPC and simulation gates' },
     { id:'ot',       icon:'🤖', label:'Robotics / OT device',  ph:'device IP   ·   SDK repo (ROS2 / DDS / lidar)', obj:'Find memory-safety / protocol bugs in this robotics/OT target' },
     { id:'ctf',      icon:'🚩', label:'CTF challenge',         ph:'challenge URL / file',                      obj:'Solve this CTF challenge and capture the flag' },
   ];

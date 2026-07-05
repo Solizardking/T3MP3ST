@@ -2,6 +2,15 @@
   "schema_version": "t3mp3st_demo_missions/v1",
   "missions": [
     {
+      "id": "solana-program-readonly-review",
+      "label": "Solana Program Read-Only Review",
+      "family": "solana_onchain",
+      "target": "11111111111111111111111111111111",
+      "directive": "Review this Solana program/account scope using read-only RPC and local/testnet simulation planning only. Validate the public key, record cluster and RPC assumptions, summarize account metadata without copying raw data, generate a Solana audit route, and produce dry-run gates before any signing or value movement.",
+      "safe_first_moves": ["validate address", "record cluster", "read account metadata", "generate audit plan", "dry-run gate"],
+      "expected_outputs": ["scope receipt", "account metadata summary", "program audit checklist", "simulation gate", "retest criteria"]
+    },
+    {
       "id": "owned-local-web-api",
       "label": "Owned Local Web/API",
       "family": "web_api",
