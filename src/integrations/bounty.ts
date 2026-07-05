@@ -53,7 +53,7 @@ export interface BountyProgram {
 }
 
 export interface BountyScopeItem {
-  type: 'web' | 'api' | 'mobile' | 'hardware' | 'iot' | 'smart_contract' | 'source_code' | 'other';
+  type: 'web' | 'api' | 'mobile' | 'hardware' | 'iot' | 'solana_program' | 'solana_token' | 'smart_contract' | 'source_code' | 'other';
   target: string;
   eligible: boolean;
   bountyRange?: string;
@@ -138,6 +138,14 @@ const BASE_CHECKLIST = [
   'Review severity rating — does it match CVSS and actual impact?',
   'Attach all necessary evidence (screenshots, logs, PoC scripts)',
 ];
+
+function isSolanaComponent(component: string): boolean {
+  return /(solana|anchor|pinocchio|program\s*id|spl[-\s]?token|token-2022|pda|cpi|lamports|mint|phantom|helius|localnet|devnet|mainnet-beta)/i.test(component);
+}
+
+function isOnChainComponent(component: string): boolean {
+  return isSolanaComponent(component) || /(contract|solidity|\.sol|defi|evm)/i.test(component);
+}
 
 // =============================================================================
 // HACKERONE CONNECTOR
@@ -353,7 +361,7 @@ export const intigritiConnector: BountyConnector = {
 };
 
 // =============================================================================
-// IMMUNEFI CONNECTOR (Web3 / DeFi)
+// IMMUNEFI CONNECTOR (Web3 / DeFi / Solana)
 // =============================================================================
 
 export const immunefiConnector: BountyConnector = {
@@ -379,7 +387,7 @@ export const immunefiConnector: BountyConnector = {
         ...BASE_CHECKLIST,
         `Immunefi program: ${programHandle}`,
         'Immunefi: reports go through their Bugfix Review process',
-        'Immunefi: smart contract bugs require on-chain PoC (testnet fork preferred)',
+        'Immunefi: Solana/on-chain bugs require scoped PoC evidence (local validator or testnet fork preferred)',
         'Immunefi: check if the program uses Immunefi\'s severity scale vs CVSS',
       ],
     };
@@ -387,10 +395,12 @@ export const immunefiConnector: BountyConnector = {
 
   validateScope(finding: BountyFinding, program: BountyProgram) {
     const component = (finding.component || '').toLowerCase();
-    const isSmartContract = component.includes('contract') || component.includes('solidity') || component.includes('.sol');
+    const isOnChain = isOnChainComponent(component);
+    const isSolana = isSolanaComponent(component);
     const match = program.scope.find(s => s.eligible && (
       component.includes(s.target.toLowerCase()) ||
-      (isSmartContract && s.type === 'smart_contract')
+      (isSolana && (s.type === 'solana_program' || s.type === 'solana_token')) ||
+      (isOnChain && s.type === 'smart_contract')
     ));
     if (match) return { inScope: true, reason: `Matches scope: ${match.target} (${match.type})` };
     return { inScope: false, reason: `No scope match for "${finding.component}"` };
@@ -456,7 +466,7 @@ export const huntrConnector: BountyConnector = {
 };
 
 // =============================================================================
-// CODE4RENA CONNECTOR (competitive smart-contract audits)
+// CODE4RENA CONNECTOR (competitive smart-contract and on-chain audits)
 // =============================================================================
 
 export const code4renaConnector: BountyConnector = {
@@ -482,14 +492,18 @@ export const code4renaConnector: BountyConnector = {
         `Code4rena contest: ${programHandle}`,
         'Code4rena: format as [H/M/QA] — High, Medium, or QA-grade',
         'Code4rena: submit via their contest portal during the active window',
-        'Code4rena: include Foundry/Hardhat test as PoC when possible',
+        'Code4rena: include Foundry/Hardhat or Solana local-validator/LiteSVM-style PoC when possible',
       ],
     };
   },
 
   validateScope(finding: BountyFinding, program: BountyProgram) {
     const component = (finding.component || '').toLowerCase();
-    const match = program.scope.find(s => s.eligible && component.includes(s.target.toLowerCase()));
+    const isSolana = isSolanaComponent(component);
+    const match = program.scope.find(s => s.eligible && (
+      component.includes(s.target.toLowerCase()) ||
+      (isSolana && (s.type === 'solana_program' || s.type === 'solana_token'))
+    ));
     if (match) return { inScope: true, reason: `In contest scope: ${match.target}` };
     return { inScope: false, reason: `"${finding.component}" not found in contest scope` };
   },

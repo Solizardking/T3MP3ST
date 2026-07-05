@@ -4,9 +4,8 @@
  *
  * THE SPLIT (read before editing):
  *   - The STRUCTURE of the attack graph is generated per-target by recon (it
- *     looks different for a repo audit vs a pentest vs a Solana program vs a
- *     smart-contract vs a
- *     model endpoint). This module defines the schema operators emit, plus a
+ *     looks different for a repo audit, pentest, Solana program, legacy
+ *     smart-contract, or model endpoint). This module defines the schema operators emit, plus a
  *     deterministic scaffold to seed/guide them and to render before live recon
  *     has populated anything.
  *   - The VISUAL STYLE is owned by ONE renderer in the UI (renderBoard in

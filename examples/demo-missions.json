@@ -38,13 +38,13 @@
       "expected_outputs": ["boundary map", "prompt eval plan", "transcript evidence", "control recommendations"]
     },
     {
-      "id": "smart-contract-local-fixture",
-      "label": "Smart Contract Local Fixture",
-      "family": "smart_contract",
-      "target": "contracts/",
-      "directive": "Analyze local smart-contract artifacts for static, property, fuzz, and dry-run risks. Stay local unless a scoped testnet receipt is provided.",
-      "safe_first_moves": ["sync arsenal", "activation", "plan tools", "log evidence"],
-      "expected_outputs": ["static findings", "property-test plan", "dry-run gate", "fix acceptance criteria"]
+      "id": "solana-local-validator-fixture",
+      "label": "Solana Local Validator Fixture",
+      "family": "solana_onchain",
+      "target": "programs/",
+      "directive": "Analyze local Solana program artifacts for signer, account-owner, PDA, CPI, SPL Token, Token-2022, compute-budget, and simulation risks. Use local validator or LiteSVM-style fixtures before any testnet receipt.",
+      "safe_first_moves": ["sync arsenal", "activation", "validate program ids", "plan simulation", "log evidence"],
+      "expected_outputs": ["program trust map", "account constraint checklist", "simulation plan", "dry-run gate", "fix acceptance criteria"]
     },
     {
       "id": "leadership-risk-brief",

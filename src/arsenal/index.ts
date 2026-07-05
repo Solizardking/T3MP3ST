@@ -913,7 +913,7 @@ export const BUILTIN_TOOLS: CustomTool[] = [
           });
         });
 
-        socket.on('error', (err) => {
+        socket.on('error', (err: Error) => {
           resolve({
             success: false,
             error: `WHOIS lookup failed: ${err.message}`,
@@ -1473,7 +1473,7 @@ export const BUILTIN_TOOLS: CustomTool[] = [
           }
         });
 
-        socket.on('error', (err) => {
+        socket.on('error', (err: Error) => {
           resolve({
             success: false,
             error: `SSL connection failed: ${err.message}`,

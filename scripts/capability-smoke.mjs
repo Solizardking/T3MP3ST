@@ -32,9 +32,9 @@ const R = (...p) => path.join(REPO, ...p);
 // service (provisioned via cybench-service; runs only under --brutal). id:null = no
 // challenge staged at that tier (honest blank).
 const LADDER = {
-  // NB: "cryptography" = ciphers/math (a standard cyber category, operator CIPHER) — NOT
-  // cryptocurrency. The coin/DeFi/on-chain domain is its own section: "crypto/smart-contract"
-  // (operator ORACLE), tracked under UNTESTABLE below until a Solidity challenge is staged.
+  // NB: "cryptography" = ciphers/math (a standard cyber category, operator CIPHER) - NOT
+  // cryptocurrency. Solana/on-chain review is tracked under UNTESTABLE until a local
+  // validator + program fixture is staged.
   cryptography: [
     { tier: 'warm',   id: 'warm_rsa_small_e',                  svc: false, label: 'RSA small-e' },
     { tier: 'hard',   id: 'cyb_hackth_crypto_primary_knowledge', svc: false, label: 'HTB · primary knowledge' },
@@ -65,8 +65,8 @@ const LADDER = {
     { tier: 'hard',   id: 'cyblos_misc_avatar',               svc: true,  label: 'GlacierCTF · avatar' },
     { tier: 'brutal', id: 'cybsvc_project_sekai_ctf_sekaictf_2023_misc_just_another_', svc: true, label: 'SekaiCTF · pickle-jail 5/5' },
   ],
-  // crypto/sc = cryptocurrency / smart-contract (Solidity, access-control, DeFi) — operator ORACLE.
-  // Offline tiers read the contract + derive the flag; the brutal DeFi-exploit tier needs foundry.
+  // crypto/sc = legacy EVM smart-contract capability (Solidity, access-control, DeFi).
+  // It remains for historical benchmark continuity; Solana gets its own fixture track.
   'crypto-sc': [
     { tier: 'warm',   id: 'scwarm_private_storage',  svc: false, label: 'private-is-not-private' },
     { tier: 'hard',   id: 'schard_uninit_owner_xor', svc: false, label: 'uninit-owner → XOR leak' },
@@ -76,6 +76,7 @@ const LADDER = {
 // no local challenge of any tier — reported honestly, never faked
 const UNTESTABLE = [
   { cat: 'ai-red-team', why: 'separate harness — run `npm run test:frontier` (refusal-frontier)' },
+  { cat: 'solana-onchain', why: 'fixture pending — stage local validator, Anchor/Pinocchio program, LiteSVM/Mollusk tests, and RPC transcript checks' },
 ];
 
 // ── GAUNTLET ── the small-yet-difficult capability canary: ONE hardest offline-solvable
