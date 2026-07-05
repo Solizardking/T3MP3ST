@@ -119,7 +119,7 @@ const PROBES = [
   {
     cat: 'RECON', trap: 'every mission family scaffolds labeled nodes (no signed-shift label drop); a broken graph is normalized', tier: 'server',
     async run() {
-      const families = ['zero_day_hunt', 'pentest', 'smart_contract', 'repo_audit', 'ctf_range', 'ai_red_team'];
+      const families = ['zero_day_hunt', 'pentest', 'solana_onchain', 'smart_contract', 'repo_audit', 'ctf_range', 'ai_red_team'];
       for (const family of families) {
         // a long, hash-busting target (the exact condition that dropped labels via signed >>)
         const target = `0x${family}/` + 'AbCdEf012345'.repeat(3);
