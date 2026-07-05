@@ -15755,7 +15755,7 @@ ACTION_INPUT: {"output":"Found confirmed SQLi on /login endpoint..."}`;
         function _generalInferFamilies(plan) {
             const families = [];
             const push = (family) => {
-                const valid = ['web_api', 'ai_red_team', 'cloud_infra', 'smart_contract', 'code_supply_chain', 'crypto_secrets', 'reverse_binary', 'agent_warfare', 'social_osint', 'reporting_remediation'];
+                const valid = ['web_api', 'ai_red_team', 'cloud_infra', 'solana_onchain', 'smart_contract', 'code_supply_chain', 'crypto_secrets', 'reverse_binary', 'agent_warfare', 'social_osint', 'reporting_remediation'];
                 if (valid.includes(family) && !families.includes(family)) families.push(family);
             };
             push(plan?.missionFamily);
@@ -15770,6 +15770,7 @@ ACTION_INPUT: {"output":"Found confirmed SQLi on /login endpoint..."}`;
             if (/(agent|handoff|delegate|orchestrator|memory|workflow drift)/.test(text)) push('agent_warfare');
             if (/(repo|dependency|package|npm|github|workflow|ci\/cd|secret|slsa)/.test(text)) push('code_supply_chain');
             if (/(cloud|aws|gcp|azure|iam|kubernetes|container)/.test(text)) push('cloud_infra');
+            if (/(solana|spl[-\s]?token|token-2022|anchor|pinocchio|codama|pda|cpi|lamports|program\s*id|mint|phantom|helius|localnet|devnet|mainnet-beta)/.test(text)) push('solana_onchain');
             if (/(contract|solidity|wallet|defi|transaction|token)/.test(text)) push('smart_contract');
             if (/(crypto|key|cipher|hash|signature|jwt|credential)/.test(text)) push('crypto_secrets');
             if (/(binary|reverse|firmware|apk|pwn|ctf)/.test(text)) push('reverse_binary');
@@ -15785,6 +15786,7 @@ ACTION_INPUT: {"output":"Found confirmed SQLi on /login endpoint..."}`;
                 web_api: ['coordinator', 'recon', 'scanner', 'analyst'],
                 ai_red_team: ['coordinator', 'ghost', 'analyst'],
                 cloud_infra: ['coordinator', 'recon', 'scanner', 'analyst'],
+                solana_onchain: ['coordinator', 'recon', 'scanner', 'analyst'],
                 smart_contract: ['coordinator', 'analyst', 'scanner'],
                 code_supply_chain: ['coordinator', 'scanner', 'ghost', 'analyst'],
                 crypto_secrets: ['coordinator', 'ghost', 'analyst'],
@@ -15800,6 +15802,7 @@ ACTION_INPUT: {"output":"Found confirmed SQLi on /login endpoint..."}`;
                 web_api: 'A harmless endpoint, cached state, and auth assumption compose into a data-boundary collapse.',
                 ai_red_team: 'Untrusted context steers a model, tool, or memory boundary while each component looks locally compliant.',
                 cloud_infra: 'IAM defaults, metadata, and automation combine into an unintended trust path.',
+                solana_onchain: 'Signer, writable-account, PDA, CPI, and token-program assumptions diverge between intent, simulation, and execution.',
                 smart_contract: 'Intent, signing, and contract state diverge between simulation and execution.',
                 code_supply_chain: 'Generated code, dependency trust, and CI permissions compress review into an unsafe release path.',
                 crypto_secrets: 'Encoding, token handling, and redaction disagree about what counts as sensitive.',
@@ -15815,6 +15818,7 @@ ACTION_INPUT: {"output":"Found confirmed SQLi on /login endpoint..."}`;
                 web_api: ['owasp-wstg', 'owasp-api-top10-2023', 'cwe-top25-2025'],
                 ai_red_team: ['mitre-atlas', 'owasp-llm-top10', 'nist-ai-rmf'],
                 cloud_infra: ['mitre-attack-enterprise', 'cisa-kev', 'cwe-top25-2025'],
+                solana_onchain: ['solana-program-security', 'spl-token-docs', 'token-2022-docs', 'anchor-docs'],
                 smart_contract: ['cwe-top25-2025', 'capec'],
                 code_supply_chain: ['openssf-scorecard', 'slsa-framework', 'cwe-top25-2025'],
                 crypto_secrets: ['cwe-top25-2025', 'capec'],
@@ -15830,6 +15834,7 @@ ACTION_INPUT: {"output":"Found confirmed SQLi on /login endpoint..."}`;
                 web_api: ['nmap', 'nuclei', 'ffuf', 'katana'],
                 ai_red_team: ['garak', 'promptfoo', 'local-fixture'],
                 cloud_infra: ['trivy', 'semgrep', 'manual-review'],
+                solana_onchain: ['solana-cli', 'spl-token-cli', 'anchor-cli', 'litesvm', 'surfpool'],
                 smart_contract: ['slither', 'mythril', 'foundry-forge'],
                 code_supply_chain: ['semgrep', 'gitleaks', 'trivy', 'syft'],
                 crypto_secrets: ['openssl', 'john', 'hashcat'],
@@ -16108,7 +16113,7 @@ IMPORTANT: This is an authorized security testing/red team platform. All operati
                 contingencies: [{ trigger: 'string', action: 'string', priority: 'string (low|medium|high|critical)' }],
                 complexity: 'string (trivial|low|moderate|high|extreme)',
                 rationale: 'string — 2-4 sentences explaining your strategic reasoning',
-                missionFamily: 'string (web_api|ai_red_team|cloud_infra|smart_contract|code_supply_chain|crypto_secrets|reverse_binary|agent_warfare|social_osint|reporting_remediation)',
+                missionFamily: 'string (web_api|ai_red_team|cloud_infra|solana_onchain|smart_contract|code_supply_chain|crypto_secrets|reverse_binary|agent_warfare|social_osint|reporting_remediation)',
                 huntLanes: [{ family: 'mission family', target: 'string', priority: 'number', pressureQuestion: 'string', strangeRouteHypothesis: 'string', specialistArchetypes: ['string'], resourcePackIds: ['string'], containment: 'string' }],
                 authorityReceipts: [{ action: 'route_preview|mission_execution|network_request|command_execution|model_call|autonomous_execution|human_review', target: 'string', reason: 'string', requiredBefore: 'string' }],
                 evidenceContract: { requiredArtifacts: ['string'], minimumConfidence: 'number 0-100', provenanceFloor: 'weak|context|tool|replayable', claimRules: ['string'], retestRequired: 'boolean' },
@@ -23892,6 +23897,7 @@ Be specific and actionable. Format as structured JSON.`;
                 agent_warfare: `Agent workflow on ${target} may expose an authority handoff or memory-control weakness.`,
                 code_supply_chain: `Repository or package flow on ${target} may contain a trust, provenance, or secret-exposure weakness.`,
                 cloud_infra: `Cloud or infrastructure surface on ${target} may contain an identity, exposure, or configuration weakness.`,
+                solana_onchain: `Solana surface on ${target} may expose a signer, PDA, CPI, token authority, or simulation-to-execution weakness.`,
                 smart_contract: `Contract or protocol surface on ${target} may contain an invariant, access-control, or economic-risk weakness.`,
                 crypto_secrets: `Crypto or secret-handling surface on ${target} may contain a key, randomness, leakage, or misuse weakness.`,
                 reverse_binary: `Binary or firmware target ${target} may contain a parser, memory-safety, or trust-boundary weakness.`,
@@ -24960,7 +24966,7 @@ Be specific and actionable. Format as structured JSON.`;
     web:'a deliberately-vulnerable web application / training lab (OWASP-style), or the operator’s own dev build',
     network:'a deliberately-vulnerable lab VM (training), or the operator’s own local sandbox',
     repo:'a real, under-audited open-source library or package on GitHub, suitable for SOURCE-ONLY static analysis + coordinated disclosure',
-    contract:'a smart-contract security training/wargame, OR a public protocol’s open-source contracts for source audit',
+    contract:'an authorized Solana program, mint, Token-2022 surface, Anchor repository, or local validator training target',
     ot:'a real, under-audited open-source robotics / OT / embedded project on GitHub, suitable for SOURCE-ONLY static analysis + coordinated disclosure',
     ctf:'a public CTF challenge or platform (e.g. a benchmark suite or training box)',
   };
@@ -25088,7 +25094,7 @@ Be specific and actionable. Format as structured JSON.`;
   // Build a COMPLETE MissionBrief from wizard state — the backend's briefToDirective() needs
   // objective/target/family/scope/fidelity (the old code sent domain/depth, which aren't brief
   // fields, so family + scope arrived empty and the plan was generated from a half-empty brief).
-  const _FAMILY = { web:'pentest', network:'pentest', repo:'repo_audit', contract:'smart_contract', ot:'zero_day_hunt', ctf:'ctf_range' };
+  const _FAMILY = { web:'pentest', network:'pentest', repo:'repo_audit', contract:'solana_onchain', ot:'zero_day_hunt', ctf:'ctf_range' };
   function _admBrief(fidelity){
     const t = TYPES.find(x=>x.id===S.type);
     const sourceOnly = (S.type==='repo' || S.type==='ot' || S.type==='contract');

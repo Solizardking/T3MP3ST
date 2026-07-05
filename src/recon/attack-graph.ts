@@ -4,7 +4,8 @@
  *
  * THE SPLIT (read before editing):
  *   - The STRUCTURE of the attack graph is generated per-target by recon (it
- *     looks different for a repo audit vs a pentest vs a smart-contract vs a
+ *     looks different for a repo audit vs a pentest vs a Solana program vs a
+ *     smart-contract vs a
  *     model endpoint). This module defines the schema operators emit, plus a
  *     deterministic scaffold to seed/guide them and to render before live recon
  *     has populated anything.
@@ -59,6 +60,7 @@ const PHASES: Record<string, string[]> = {
   zero_day_hunt: ['SURFACE', 'ENTRYPOINTS', 'SINKS', 'PRIMITIVE', 'IMPACT'],
   repo_audit:    ['SURFACE', 'ENTRYPOINTS', 'SINKS', 'PRIMITIVE', 'IMPACT'],
   pentest:       ['RECON', 'FOOTHOLD', 'PRIVESC', 'LATERAL', 'EXFIL'],
+  solana_onchain:['SCOPE', 'ACCOUNTS', 'SIGNERS', 'CPI/TOKEN', 'SIMULATION', 'IMPACT'],
   smart_contract:['SURFACE', 'ENTRYPOINTS', 'STATE', 'INVARIANT', 'IMPACT'],
   ai_red_team:   ['PROBE', 'ELICIT', 'BYPASS', 'EXFIL'],
   ctf_range:     ['RECON', 'FOOTHOLD', 'EXPLOIT', 'FLAG'],
@@ -70,6 +72,7 @@ const VOCAB: Record<string, string[]> = {
   zero_day_hunt: ['parser', 'codec', 'deserializer', 'net-io', 'alloc', 'session', 'frame-hdr', 'length-field', 'state-machine'],
   repo_audit:    ['parser', 'codec', 'deserializer', 'net-io', 'alloc', 'session', 'frame-hdr', 'length-field', 'sink'],
   pentest:       ['/login', '/api', '/admin', '/upload', 'session', 'jwt', 'smb', 'rdp', 'metadata'],
+  solana_onchain:['program-id', 'account-owner', 'pda-seeds', 'signer-check', 'writable-account', 'cpi-boundary', 'spl-authority', 'token-2022-extension', 'compute-budget'],
   smart_contract:['withdraw()', 'deposit()', '_transfer', 'oracle', 'vault', 'collateral', 'price-feed', 'reentry'],
   ai_red_team:   ['system-prompt', 'tool-router', 'context-window', 'guardrail', 'refusal-edge', 'memory'],
   ctf_range:     ['port-1337', '/cgi-bin', 'binary', 'libc', 'canary', 'overflow'],

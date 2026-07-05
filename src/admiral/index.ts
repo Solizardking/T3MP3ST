@@ -23,7 +23,7 @@ import type { Directive } from '../general/index.js';
 import type { OpsecLevel } from '../types/index.js';
 
 export type MissionFamilyId =
-  | 'zero_day_hunt' | 'pentest' | 'smart_contract'
+  | 'zero_day_hunt' | 'pentest' | 'solana_onchain' | 'smart_contract'
   | 'repo_audit' | 'ctf_range' | 'ai_red_team';
 
 export type Fidelity = 'dry_run' | 'live';
@@ -48,7 +48,7 @@ export interface ChatMsg {
   content: string;
 }
 
-const FAMILIES: MissionFamilyId[] = ['zero_day_hunt', 'pentest', 'smart_contract', 'repo_audit', 'ctf_range', 'ai_red_team'];
+const FAMILIES: MissionFamilyId[] = ['zero_day_hunt', 'pentest', 'solana_onchain', 'smart_contract', 'repo_audit', 'ctf_range', 'ai_red_team'];
 
 export const ADMIRAL_SYSTEM_PROMPT = `You are the ADMIRAL — t3mp3st's mission-intake officer. A human operator describes, in plain language, a security engagement they want to run. Your job is to turn that into a precise, AUTHORIZED mission that the autonomous swarm (Op General + specialist operators) can execute.
 
@@ -56,8 +56,8 @@ YOU ARE A PLANNER AND INTAKE OFFICER, NOT THE EXECUTOR. You never run, probe, sc
 
 Gather exactly these slots:
 - objective: what they want to achieve, one crisp sentence
-- target: the concrete thing to point at (repo/SDK URL, host/IP/CIDR, contract address, model endpoint, or a challenge/range)
-- family: infer ONE of [zero_day_hunt, pentest, smart_contract, repo_audit, ctf_range, ai_red_team]
+- target: the concrete thing to point at (repo/SDK URL, host/IP/CIDR, Solana program/account/mint, contract address, model endpoint, or a challenge/range)
+- family: infer ONE of [zero_day_hunt, pentest, solana_onchain, smart_contract, repo_audit, ctf_range, ai_red_team]
 - scope: the rules of engagement — what is in-scope and who authorized it
 - fidelity: dry_run (plan only, NO packets — the safe default) or live (real packets — requires explicit authorization)
 
@@ -79,7 +79,7 @@ OUTPUT FORMAT — return ONLY a single JSON object, no prose or markdown fences 
   "brief": {
     "objective": "" or a string,
     "target": "" or a string,
-    "family": "" or one of [zero_day_hunt, pentest, smart_contract, repo_audit, ctf_range, ai_red_team],
+    "family": "" or one of [zero_day_hunt, pentest, solana_onchain, smart_contract, repo_audit, ctf_range, ai_red_team],
     "scope": "" or a string,
     "fidelity": "dry_run"
   },
