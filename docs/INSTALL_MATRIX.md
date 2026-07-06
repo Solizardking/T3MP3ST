@@ -1,19 +1,30 @@
-# T3MP3ST Install Matrix
+# Solana Trading Install Matrix
 
-Use this as the team-facing view of what a workstation needs. The UI and API remain useful without every binary installed, but local command readiness improves as these tools appear on `PATH`.
+Use this as the team-facing view of what a workstation needs. The UI and API remain useful without every optional binary, but Solana trading review improves as read-only and simulation tools appear on `PATH`.
 
 | Lane | Tools | macOS | Linux Notes | Execution |
 | --- | --- | --- | --- | --- |
-| Core evidence | `file`, `curl`, `dig`, `host`, `whois`, `openssl` | Usually present or `brew install bind openssl@3` | Usually package-manager available | Mixed local and receipt-gated |
-| Web/API recon | `nmap`, `subfinder`, `httpx`, `naabu`, `katana`, `nuclei` | Homebrew plus ProjectDiscovery tap | Prefer distro packages or upstream release binaries | Receipt-gated |
-| Web/API pressure | `ffuf`, `gobuster`, `feroxbuster`, `nikto`, `dalfox`, `sqlmap` | Homebrew | Distro packages, Go installs, or upstream releases | Receipt-gated |
-| Supply chain | `semgrep`, `gitleaks`, `trufflehog`, `trivy`, `syft`, `grype`, `osv-scanner` | Homebrew or pipx where noted | Distro packages, pipx, or upstream releases | Mostly local-read |
-| Cloud/IaC | `checkov`, `prowler` | Homebrew or pipx | pipx usually cleanest | Local-read or receipt-gated cloud account checks |
-| AI/agent | `garak`, `promptfoo` | pipx and npm | pipx and npm | Receipt-gated model/system probing |
-| Smart contract | `slither`, `myth`, `echidna`, `forge`, `cast`, `solhint` | pipx, Homebrew tap, Foundry installer, npm | pipx, upstream releases, Foundry installer, npm | Local-read plus receipt-gated chain calls |
-| Crypto audit | `john`, `hashcat` | Homebrew | Distro packages | Receipt-gated, never store recovered secrets |
-| Reverse/mobile/fuzz | `radamsa`, `afl-fuzz`, `r2`, `apktool`, `jadx`, `exiftool`, `binwalk`, `yara` | Homebrew | Distro packages or upstream releases | Local-read lab artifacts |
-| Gated/import | `msfconsole`, `hydra`, `bloodhound` | Optional | Optional | Catalog-only or import-only until narrow adapters exist |
+| Core app | `node`, `npm`, `tsx`, `tsc`, `vitest` | Node installer or Homebrew | Distro package, nvm, or upstream Node | Local |
+| Core evidence | `curl`, `jq`, `openssl`, `dig` | `brew install jq openssl bind` | Package-manager available | Local-read |
+| Solana RPC review | Built-in adapters, optional Solana CLI | Solana CLI optional | Solana CLI optional | Read-only by default |
+| Transaction review | Built-in decoders, simulation plan generator | No signer required | No signer required | Local/read-only |
+| Token review | SPL Token and Token-2022 account inspection | No private keys | No private keys | Read-only |
+| Program review | Anchor IDLs, source artifacts, account owner checks | Anchor optional | Anchor optional | Local-read plus RPC-read |
+| Local simulation | LiteSVM, Mollusk, Surfpool, local validator where needed | Project-dependent | Project-dependent | Local/devnet |
+| AI boundary | `promptfoo`, `garak` | npm and pipx | npm and pipx | Receipt-gated model probing |
+| Reporting | Built-in evidence, findings, retests, disclosure generator | Included | Included | Local |
+| Gated/signing | Wallets, Solana CLI submit, SPL Token mutation commands | Catalog-only unless narrowly adapted | Catalog-only unless narrowly adapted | Human receipt required |
+
+## Minimum Useful Workstation
+
+```bash
+npm ci
+npm run doctor
+npm run test:solana
+npm run arsenal:smoke
+```
+
+Optional Solana inspection tools can be installed separately, but T3MP3ST must not require a private key to load, test, decode, simulate, or report.
 
 ## macOS Homebrew Repair
 
@@ -24,14 +35,9 @@ sudo chown -R "$(whoami)":admin /opt/homebrew
 brew doctor
 ```
 
-## Minimum Useful Workstation
+## Gate Expectations
 
-For a first team preview, prioritize:
-
-```bash
-brew install nmap ffuf nuclei semgrep gitleaks trivy syft grype exiftool yara
-npm install -g promptfoo
-pipx install garak
-```
-
-This gives the team a practical web, repo, evidence, and AI-boundary loop without waiting on the full arsenal.
+- Missing Solana CLI should degrade read-only command readiness, not break the UI.
+- Missing wallet should not block decoding or simulation planning.
+- Any tool capable of signing, transfer, authority mutation, or broadcast remains receipt-required.
+- The ledger must never store private keys, seed phrases, session tokens, wallet exports, or raw recovered secrets.

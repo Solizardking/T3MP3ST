@@ -1,14 +1,15 @@
-# T3MP3ST Team Preview
+# T3MP3ST Solana Trading Team Preview
 
-This preview is for prompt engineers, red-teamers, bug bounty operators, cyber researchers, and builders who want to pressure-test T3MP3ST before a broader release.
+This preview is for Solana protocol teams, wallet builders, trading-tool developers, security researchers, and operators who want an evidence-first review loop for trading workflows.
 
-The useful mental model: T3MP3ST is an evidence-first adversarial AI command center. It is not only a scanner UI. It routes a mission into specialist agent lanes, binds tool output to evidence, promotes evidence into findings, retests claims, and only then proposes durable learning.
+The useful mental model: T3MP3ST is a Solana trading-security command center. It routes a mission into specialist lanes, binds RPC and simulation output to evidence, promotes evidence into findings, retests claims, and only then proposes durable learning.
 
 ## Ten-Minute First Run
 
 ```bash
-npm install
+npm ci
 npm run doctor
+npm run test:solana
 npm run server
 ```
 
@@ -16,71 +17,69 @@ Open `http://127.0.0.1:3333/ui/`.
 
 In the UI:
 
-1. Click `preflight`.
-2. Click `sync arsenal`.
-3. Click `activation`.
-4. Pick a guided start.
-5. Run `plan tools`.
-6. Log one evidence item, seed a hypothesis, and use the Watch Loop `pulse` to see what is missing.
-7. Click Watch Loop `nudge` to split the hypothesis into work orders, complete one task, promote it, and queue one retest.
-8. Run `gate` and `bundle`.
-9. Run `review run` in the Learning Capsule.
+1. Select the Solana or program/token guided start.
+2. Enter a devnet, localnet, or read-only mainnet target.
+3. Confirm scope and action class.
+4. Run preflight.
+5. Sync arsenal.
+6. Generate a route or account review plan.
+7. Attach one RPC or source evidence item.
+8. Seed one hypothesis: stale quote, unknown program, token identity, authority risk, or wallet mismatch.
+9. Run the Watch Loop pulse.
+10. Promote one evidence-backed finding and queue a retest.
 
 Expected state on a fresh machine:
 
-- The UI should load even without an LLM key.
-- LLM calls should fail closed with a clear message.
-- The arsenal should distinguish catalog tools, wired adapters, and locally installed tools.
-- Missing binaries should be shown as activation work, not hidden as success.
+- The UI should load without an LLM key.
+- Solana tests should pass without private keys.
+- Read-only account review should not need a wallet.
+- Missing optional Solana tools should appear as activation work, not hidden success.
+- Signing and value movement should be blocked without receipt.
 
 ## What Is Real Today
 
 - Express API server and static command-center UI.
-- Mission drafts, route previews, mission bundles, and mission gates.
-- Resource packs, agent prompt packs, operator runbooks, and forefront pressure lanes.
-- Tool adapter catalog with execution modes, evidence kinds, install hints, and receipt gates.
-- ScopeGuard approvals for active or networked operations.
+- Solana mission drafts, route previews, mission bundles, and mission gates.
+- Solana target factories and public-key validation.
+- Read-only RPC health/account lookup planning.
+- Transaction dry-run plan generation.
+- ScopeGuard approvals for signing, value movement, authority changes, governance actions, and production writes.
 - Evidence, hypothesis graph, hunt queue work orders, findings, retests, and accepted-memory proposal flow.
-- Watch Loop pulses that surface stale hypotheses, receipt gates, missing disproof, open work orders, retest gaps, and learning proposals.
-- Full local smoke scripts for API, arsenal, field drills, exploit-chain simulation, and prompt packs.
+- Watch Loop pulses for stale evidence, missing simulation, receipt gates, open work orders, retest gaps, and learning proposals.
 
 ## What Is Preview
 
-- Specialist agents are represented by route contracts, prompt packs, runbooks, and orchestration surfaces; production multi-agent execution still needs provider configuration and deeper harness hardening.
-- Some Pliny Specials endpoints use synthetic payloads or local-safe demos to validate orchestration shape.
-- Catalog-only tools are intentionally modeled but not executable through generic command dispatch.
-- Installed tool readiness depends on the local workstation; see `docs/ARSENAL_ACTIVATION_PLAN.md`.
+- Route graph visualization is still a reporting surface, not a trade executor.
+- Wallet UX review is designed around decoded transaction evidence and human receipts.
+- Catalog-only signing tools are intentionally modeled but not executable through generic command dispatch.
+- Installed tool readiness depends on the local workstation; see [ARSENAL_ACTIVATION_PLAN.md](ARSENAL_ACTIVATION_PLAN.md).
 
 ## Demo Missions
 
-Run all local-safe demos:
+Run local-safe demos:
 
 ```bash
 npm run field:drill
-npm run exploit:smoke
 npm run arsenal:smoke
 npm run prompt:audit
+npm run test:solana
 ```
 
-Run one focused field drill:
+Suggested mission seeds:
 
-```bash
-npm run field:drill -- --scenario=local-web-api
-npm run field:drill -- --scenario=repo-supply-chain
-npm run field:drill -- --scenario=ai-agent-boundary
-```
-
-Use `examples/demo-missions.json` for plain-language mission seeds that can be copied into the Mission Contract box.
+- "Review this devnet transaction for hidden value or authority movement."
+- "Inspect this token mint for identity, authority, and Token-2022 extension risk."
+- "Compare this quoted route against a pre-sign simulation artifact."
+- "Check whether this trading assistant treats market data as instructions."
 
 ## Feedback We Want
 
-- Where does the UI make the operator feel uncertain?
-- Which mission family needs the next real adapter?
-- Which prompt pack has the strongest or weakest evidence contract?
-- Which hypothesis, work-order, finding, retest, or learning states feel ambiguous?
-- Which Watch Loop signals are actionable, noisy, or missing from the always-on hunt?
-- Which features look real but should be labeled as preview?
-- Which workflow should be one click easier for nontechnical operators?
+- Where does the UI make the operator uncertain about signing risk?
+- Which Solana evidence is missing from the finding view?
+- Which route, token, wallet, or program risk needs the next adapter?
+- Which Watch Loop signal is actionable, noisy, or missing?
+- Which feature looks executable but should be labeled as review-only?
+- Which workflow should be one click easier for protocol-team reviewers?
 
 ## Ship Gate For Team Builds
 
@@ -89,6 +88,7 @@ Before pushing a team preview branch, run:
 ```bash
 npm run typecheck
 npm test
+npm run test:solana
 npm run doctor
 npm run arsenal:smoke
 ```

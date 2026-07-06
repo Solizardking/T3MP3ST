@@ -1,81 +1,115 @@
-# T3MP3ST Arsenal Activation Plan
+# Solana Trading Arsenal Activation Plan
 
-This plan turns the visual 100+ tool loadout into a real local operator workstation without pretending missing binaries are ready. The backend reports three separate numbers:
+This plan turns T3MP3ST into a Solana trading-security workstation. The arsenal is designed for evidence, decoding, simulation, and operator review. It is not a private-key bot and it does not submit trades by default.
 
-- Catalog tools: the full UI loadout vocabulary.
-- Wired adapters: tools the backend knows how to reason about, gate, and attach to evidence.
-- Installed command adapters: wired tools present on this machine right now.
+The backend should continue to report three separate readiness numbers:
 
-## Phase 1: Core Evidence And Recon
+- Catalog tools: the full vocabulary of Solana, trading, AI-boundary, and reporting capabilities.
+- Wired adapters: tools the backend can reason about, gate, and attach to evidence.
+- Installed command adapters: wired tools present on this workstation right now.
 
-These unlock the baseline web, DNS, repo, and report loops.
+## Phase 1: Core Solana Evidence
 
-If Homebrew is owned by a different macOS user, repair the prefix first:
-
-```bash
-sudo chown -R "$(whoami)":admin /opt/homebrew
-brew doctor
-```
+These unlock public-key validation, RPC health checks, account lookup, transaction decoding, and safe report generation.
 
 ```bash
-brew install pipx
-brew install nmap ffuf gobuster feroxbuster nikto dalfox sqlmap exiftool yara binwalk radamsa
-brew install projectdiscovery/tap/subfinder projectdiscovery/tap/httpx projectdiscovery/tap/naabu projectdiscovery/tap/katana projectdiscovery/tap/nuclei
+npm ci
+npm run doctor
+npm run test:solana
 ```
 
-## Phase 2: Repository, Package, And Cloud
-
-These make T3MP3ST useful as a package and supply-chain hunter.
+Recommended workstation tools:
 
 ```bash
-brew install semgrep gitleaks trufflehog syft grype osv-scanner checkov
-brew install aquasecurity/trivy/trivy
-pipx install prowler
+brew install jq curl openssl
+brew install node
 ```
 
-## Phase 3: AI And Agent Boundary Testing
+The Solana CLI is useful for operator inspection, but it must remain behind narrow adapters. Do not expose a generic CLI execution surface that can sign or submit transactions.
 
-These power prompt, tool, memory, and model-boundary regression packs.
+## Phase 2: RPC, Account, And Token Review
+
+These make the lane useful for read-only on-chain trading review.
+
+- RPC health and commitment checks.
+- Program/account owner validation.
+- SPL Token and Token-2022 mint review.
+- Token account, associated token account, and vault relationship checks.
+- Transaction message decoding.
+- Simulation plan generation.
+
+Required evidence for this phase:
+
+- Cluster and RPC endpoint.
+- Commitment level.
+- Public key role.
+- Account owner and executable status.
+- Token program variant.
+- Slot and timestamp.
+
+## Phase 3: Route And Wallet-Prompt Review
+
+These controls make quote, route, and wallet UX safer.
+
+- Route graph inventory: programs, pools, vaults, mints, writable accounts, signers.
+- Quote-to-execution drift checks.
+- Compute budget and priority-fee review.
+- Unknown-program detection.
+- Wallet prompt summary before any signature request.
+- Human receipt before value movement or authority movement.
+
+Ship only when every route-level finding can cite a decoded transaction or simulation artifact.
+
+## Phase 4: AI And Agent Boundary Testing
+
+Trading assistants are high-risk because market data, token pages, social posts, and retrieved notes can look like instructions.
 
 ```bash
 npm install -g promptfoo
 pipx install garak
 ```
 
-## Phase 4: Smart Contract And Crypto
+Use these tools only for authorized model, prompt, RAG, and tool-boundary tests. The test objective is to prove the agent keeps data and instructions separate, not to bypass safety controls.
 
-These fill the previously hollow smart-contract and crypto lanes.
+## Phase 5: Reporting, Integrity, And Team Preview
 
-```bash
-npm install -g solhint
-pipx install slither-analyzer mythril
-brew install crytic/tap/echidna hashcat john
-```
-
-Foundry should be installed from the official Foundry installer, then verified with `forge --version` and `cast --version`.
-
-## Phase 5: Reverse, Firmware, And Mobile
-
-These move the harness toward local artifact and binary zero-day hunting.
+Before a team demo:
 
 ```bash
-brew install radare2 afl++ apktool jadx
+npm run typecheck
+npm test
+npm run arsenal:smoke
+npm run prompt:audit
+npm run test:solana
 ```
+
+Evidence should flow into:
+
+- Scope receipt.
+- Account or route evidence.
+- Simulation artifact.
+- Finding with impact and fix.
+- Retest.
+- Release note.
 
 ## Held Behind Gates
 
-Some tools should remain catalog-only or import-only until T3MP3ST has narrow adapters, scope receipts, and evidence redaction for each workflow:
+The following remain catalog-only or receipt-required until narrow no-submit adapters exist:
 
-- Metasploit: no generic shell-through execution.
-- Hydra: no generic credential attack runner.
-- BloodHound: import graph evidence first; collector execution needs explicit directory scope.
+- Solana CLI signing and transaction submission.
+- SPL Token CLI authority, mint, burn, close, and transfer commands.
+- Wallet automation.
+- Mainnet transaction broadcasting.
+- Any swap, transfer, vote, mint, burn, delegate, close-account, or authority-change workflow.
+- Any MEV, front-running, sandwich, spam, spoofing, or market-manipulation workflow.
 
 ## Ship Criteria
 
-Call the arsenal operational only when:
+Call the Solana trading arsenal operational only when:
 
-- `/api/arsenal/status` shows nonzero command-ready adapters for every mission family.
-- High-value adapters for the active mission are installed or intentionally waived.
-- Active or networked commands require ScopeGuard approval receipts.
-- Tool output can be attached to evidence, linked to findings, and retested.
-- Recovered secrets, credentials, tokens, and private keys are never written to the ledger.
+- `npm run test:solana` passes.
+- `/api/arsenal/status` shows nonzero command-ready adapters for `solana_onchain`.
+- Read-only RPC evidence can be attached to findings.
+- Transaction dry-run plans exist before wallet prompts.
+- ScopeGuard blocks signing, value movement, and authority changes without a human receipt.
+- The ledger never stores raw secrets, private keys, seed phrases, wallet exports, or recovered credentials.

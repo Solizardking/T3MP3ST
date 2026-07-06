@@ -1,63 +1,67 @@
 # Release Checklist
 
-A repeatable, artifact-first checklist for cutting a T3MP3ST release. The guiding rule is the
-same as the project itself: **every headline number re-derives from committed artifacts** — so a
-release isn't cut until the deterministic gates and the local smoke path are green.
+A repeatable checklist for cutting a Solana trading-security release. The release is not ready until deterministic gates pass and the docs still match the no-key, simulation-first safety posture.
 
-## 1. Deterministic gates (must all pass)
+## 1. Deterministic Gates
 
 ```bash
 npm ci
-npm run typecheck            # tsc — 0 errors
-npm run build                # tsc build
-npm run lint                 # 0 errors (warnings OK)
-npm test                     # unit + integration suite
-npm run verify-claims        # re-derives every headline number from committed artifacts
-npm audit                    # expect 0 vulnerabilities
-npm run test:no-fitting      # anti-benchmark-fitting guard
-npm run test:no-self-fitting
+npm run typecheck
+npm run build
+npm run lint
+npm test
+npm run test:solana
 npm run test:no-phantom-tools
-npm run test:gate
+npm run test:no-fitting
+npm run test:no-self-fitting
 npm run prompt:audit
+npm audit
 ```
 
-## 2. Local API smoke (loopback only)
+## 2. Local API Smoke
 
 ```bash
-T3MP3ST_PORT=<free-port> npm run server &                 # start on an isolated port
-T3MP3ST_PORT=<free-port> npm run smoke                    # health + endpoint smoke
-T3MP3ST_API_URL=http://127.0.0.1:<free-port> npm run exploit:smoke
+T3MP3ST_PORT=<free-port> npm run server
+T3MP3ST_API_URL=http://127.0.0.1:<free-port> npm run smoke
 T3MP3ST_API_URL=http://127.0.0.1:<free-port> npm run field:drill
-npm run arsenal:smoke                                     # self-contained, 125 checks
+npm run arsenal:smoke
 ```
 
 Stop any listeners you started when done.
 
-## 3. Optional — live checks (network + keys)
+## 3. Solana Trading Smoke
 
 ```bash
-npm run smoke -- --live       # exercises a live LLM (needs a provider key or a local agent)
-npm run arsenal:doctor        # reports which optional external tools are installed
+npm run test:solana
+npm run arsenal:doctor
 ```
 
-## 4. Arsenal prerequisites (optional external tools)
+Confirm the UI and API can:
 
-The bash-only path needs **no** external tools. Specialist operators can use standard offensive
-tooling if present on `PATH`; `npm run arsenal:doctor` reports what's installed. Missing tools
-degrade gracefully — they never fail the core run.
+- Validate Solana public keys.
+- Read account metadata without a private key.
+- Produce a program audit plan.
+- Produce a transaction dry-run plan.
+- Block signing, value movement, and authority changes without receipt.
 
-## 5. ⚠️ Scope & safety
+## 4. Documentation Gate
 
-- **Never run live scans or exploitation against a target without an explicit authorization /
-  scope receipt.** The default posture is owned / local / synthetic targets only.
-- The server binds `127.0.0.1` by default. If you set `T3MP3ST_HOST` to a non-loopback address,
-  it prints an **EXPOSURE WARNING** — the API executes commands and has **no built-in auth**. Put
-  a Bearer-token reverse proxy in front of it before any LAN / internet exposure.
+Before tagging:
+
+- Search docs for private-key instructions, seed-phrase requests, or automatic trade execution language.
+- Verify every trading workflow says read-only, simulation, devnet, localnet, or human receipt.
+- Verify no doc presents buy/sell/hold recommendations or profit claims.
+- Verify Token-2022 and authority-review language remains visible.
+
+## 5. Scope And Exposure
+
+- Never run live scans, chain mutations, wallet prompts, or production writes without explicit authorization and receipt.
+- The server binds `127.0.0.1` by default.
+- If `T3MP3ST_HOST` is non-loopback, place authentication and network controls in front of the API before team use.
+- Treat every signing-capable adapter as receipt-required.
 
 ## 6. Publish
 
-- Verify `repository.url` in `package.json` points at this repo. To retarget it:
-  ```bash
-  npm pkg set repository.url="git+https://github.com/<owner>/<repo>.git"
-  ```
-- Tag the release only after Sections 1–2 are green.
+- Verify `package.json` metadata still describes the Solana-native evidence and simulation posture.
+- Tag only after Sections 1 through 4 are green.
+- Include known preview limitations in release notes.
