@@ -122,25 +122,22 @@ export function normalizeSolanaCluster(value: unknown, fallback: SolanaCluster =
 
 export function decodeBase58(input: string): Uint8Array | null {
   if (!input || ![...input].every(char => BASE58_INDEX.has(char))) return null;
-  const bytes = [0];
+  let value = 0n;
   for (const char of input) {
-    let carry = BASE58_INDEX.get(char);
-    if (carry === undefined) return null;
-    for (let i = 0; i < bytes.length; i++) {
-      carry += bytes[i] * 58;
-      bytes[i] = carry & 0xff;
-      carry >>= 8;
-    }
-    while (carry > 0) {
-      bytes.push(carry & 0xff);
-      carry >>= 8;
-    }
+    value = value * 58n + BigInt(BASE58_INDEX.get(char) ?? 0);
   }
+  const bytes: number[] = [];
+  while (value > 0n) {
+    bytes.push(Number(value & 0xffn));
+    value >>= 8n;
+  }
+  bytes.reverse();
+  const leadingZeros: number[] = [];
   for (const char of input) {
     if (char !== '1') break;
-    bytes.push(0);
+    leadingZeros.push(0);
   }
-  return new Uint8Array(bytes.reverse());
+  return new Uint8Array([...leadingZeros, ...bytes]);
 }
 
 export function isSolanaAddress(value: unknown): value is string {
