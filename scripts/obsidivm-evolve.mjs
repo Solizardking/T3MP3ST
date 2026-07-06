@@ -36,6 +36,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { runAblation, ablationLeaderboard } from './obsidivm-ablate.mjs';
+import { loadRepoEnv } from './env.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -44,18 +45,7 @@ const EVO_DIR    = path.join(REPO, 'bench', 'obsidivm-evolution');
 
 // ----- env / key loading (shared) -----------------------------------------
 
-try {
-  const envPath = path.join(REPO, '.env');
-  if (fs.existsSync(envPath)) {
-    for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
-      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
-      if (!m || line.trim().startsWith('#')) continue;
-      let v = m[2];
-      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
-      if (!process.env[m[1]]) process.env[m[1]] = v;
-    }
-  }
-} catch {}
+loadRepoEnv({ root: REPO, includeKeysLocal: false });
 if (process.platform === 'darwin') {
   for (const name of ['OPENROUTER_API_KEY', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY']) {
     if (process.env[name]) continue;

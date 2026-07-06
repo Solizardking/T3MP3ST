@@ -31,6 +31,7 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { specialistFor } from './specialists.mjs';
 import { loadAllLessons, recallLessons, captureFailure } from './lessons.mjs';
+import { loadRepoEnv } from './env.mjs';
 
 const exec = promisify(execFile);
 
@@ -108,21 +109,8 @@ const CHAL_DIR   = process.env.CYB_CHAL_DIR
   : path.join(REPO, 'bench', 'cybench', 'challenges');
 
 // shared .env + Keychain loader -------------------------------------------
-try {
-  // .env (all project secrets) + .keys.local (a dedicated single-purpose paste file for one-off
-  // keys like VENICE_API_KEY — gitignored, kept separate so pasting one key doesn't expose .env).
-  for (const fname of ['.env', '.keys.local']) {
-    const envPath = path.join(REPO, fname);
-    if (!fs.existsSync(envPath)) continue;
-    for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
-      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
-      if (!m || line.trim().startsWith('#')) continue;
-      let v = m[2];
-      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
-      if (!process.env[m[1]]) process.env[m[1]] = v;
-    }
-  }
-} catch {}
+// .env.local/.env (project secrets) + .keys.local (single-purpose one-off keys).
+loadRepoEnv({ root: REPO });
 if (process.platform === 'darwin') {
   for (const name of ['OPENROUTER_API_KEY', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY']) {
     if (process.env[name]) continue;

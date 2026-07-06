@@ -27,24 +27,14 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { obsidivm } from './obsidivm-bridge.mjs';
 import { runProbes, loadProbes } from './obsidivm-replay.mjs';
+import { loadRepoEnv } from './env.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 const REPO       = path.resolve(__dirname, '..');
 
-// .env + Keychain key lookup (shared with cve-hunt-bench)
-try {
-  const envPath = path.join(REPO, '.env');
-  if (fs.existsSync(envPath)) {
-    for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
-      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
-      if (!m || line.trim().startsWith('#')) continue;
-      let v = m[2];
-      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
-      if (!process.env[m[1]]) process.env[m[1]] = v;
-    }
-  }
-} catch {}
+// .env.local/.env + Keychain key lookup (shared with cve-hunt-bench)
+loadRepoEnv({ root: REPO, includeKeysLocal: false });
 if (process.platform === 'darwin') {
   for (const name of ['OPENROUTER_API_KEY', 'ANTHROPIC_API_KEY', 'OPENAI_API_KEY']) {
     if (process.env[name]) continue;

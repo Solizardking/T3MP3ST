@@ -10,6 +10,7 @@ import { homedir } from 'os';
 import { join } from 'path';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import type { LLMProvider, LLMConfig, FallbackEntry, OpsecLevel } from '../types/index.js';
+import '../env.js';
 
 // =============================================================================
 // CONFIGURATION SCHEMA

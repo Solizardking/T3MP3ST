@@ -23,11 +23,13 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { LLMBackbone } from '../dist/llm/index.js';
 import { bashTool, parseFindings, normalizeModel } from './cve-zero-hunt.mjs';
+import { loadRepoEnv } from './env.mjs';
 
 const execFile = promisify(_execFile);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const RESULTS = path.join(ROOT, 'bench', 'wild-hunt', 'results');
+loadRepoEnv({ root: ROOT });
 
 // ---- args ----------------------------------------------------------------
 const args = { repo: null, ref: null, paths: null, model: 'claude-opus-4-8', maxIters: 26, hint: null };
@@ -46,12 +48,7 @@ const repoUrl = /^https?:\/\//.test(args.repo) ? args.repo : `https://github.com
 const repoSlug = args.repo.replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '');
 
 function realKey() {
-  if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
-  const p = path.join(ROOT, '.env');
-  if (fs.existsSync(p)) for (const l of fs.readFileSync(p, 'utf8').split('\n')) {
-    const m = l.match(/^\s*OPENROUTER_API_KEY\s*=\s*(.+?)\s*$/); if (m) return m[1];
-  }
-  return null;
+  return process.env.OPENROUTER_API_KEY || null;
 }
 const REAL = realKey();
 if (!REAL) { console.error('no OPENROUTER_API_KEY'); process.exit(2); }
