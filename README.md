@@ -29,9 +29,70 @@ surfaces, SPL Token, Token-2022, and simulation-before-signing gates.
   `/Users/8bit/Perp-Dex-Trading-Bot-main/src/ui` so the strategy selector and
   Trend/Maker/Offset Maker dashboards use Phoenix, Vulcan, Solana, paper/live
   mode, FIFO order book, account risk, and receipt-gate language.
+- Mapped the Phoenix documentation index into the README so operators can jump
+  from T3MP3ST review gates to Vulcan CLI setup, strategy loops, Phoenix risk
+  pages, and Rise SDK integration docs.
 - Preserved the safety floor: no private keys or seed phrases, no autonomous
   swaps/transfers/votes/mints/burns/authority changes, no market manipulation,
   and no buy/sell/hold advice.
+
+## Phoenix/Vulcan Companion Workflow
+
+Phoenix perpetual futures are live Solana mainnet markets. Vulcan is the
+agent- and human-friendly CLI surface for Phoenix, with structured JSON output,
+strategy runners, and a local MCP server. Treat it as a companion operator tool,
+not as an unguarded execution backend.
+
+Use T3MP3ST for review gates:
+
+1. Scope the market, wallet, trader account, RPC endpoint, and action class.
+2. Read market/account state and decode transaction intent.
+3. Require paper mode or local/devnet fixtures for agent rehearsal.
+4. Require simulation and human receipts before live signing or value movement.
+5. Attach command output, transaction signatures, fills, funding, and PnL to
+   evidence only after redaction.
+
+Install and verify Vulcan separately:
+
+```bash
+curl -fsSL https://github.com/Ellipsis-Labs/vulcan-cli/releases/latest/download/install.sh | sh
+vulcan version
+vulcan setup
+vulcan status -o json
+```
+
+Agent-safe defaults:
+
+```bash
+vulcan mcp
+vulcan agent install --target codex
+vulcan agent health
+vulcan agent mcp diagnose --target codex --scope user
+```
+
+Live-capable mode is intentionally explicit:
+
+```bash
+export VULCAN_WALLET_NAME=my-wallet
+export VULCAN_WALLET_PASSWORD=your-password
+vulcan mcp --allow-dangerous
+```
+
+Do not put live-capable MCP config behind unattended agent access unless wallet
+permissions, paper/live mode, confirmations, receipts, and operator monitoring
+are all in place.
+
+Phoenix docs to keep beside the console:
+
+- [Vulcan CLI](https://docs.phoenix.trade/cli/index.md)
+- [Vulcan installation](https://docs.phoenix.trade/cli/installation.md)
+- [Vulcan command reference](https://docs.phoenix.trade/cli/commands.md)
+- [Vulcan strategies](https://docs.phoenix.trade/cli/strategies.md)
+- [Phoenix account health](https://docs.phoenix.trade/phoenix/margin-and-risk/account-health.md)
+- [Phoenix order types](https://docs.phoenix.trade/phoenix/matching-engine/order-types.md)
+- [Phoenix FIFO order book](https://docs.phoenix.trade/phoenix/matching-engine/fifo-order-book.md)
+- [Rise SDK orders](https://docs.phoenix.trade/sdk/orders.md)
+- [Phoenix REST/WebSocket best practices](https://docs.phoenix.trade/sdk/ws-api-best-practices.md)
 
 ## Safety Floor
 
