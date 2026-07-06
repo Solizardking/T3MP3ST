@@ -1,13 +1,37 @@
 # T3MP3ST Solana
 
 T3MP3ST is now adapted as a Solana-native multi-agent harness for on-chain
-security review, read-only RPC evidence, local/testnet simulation planning,
-x402-aware service gates, and defensive agent operations.
+trading-security review, read-only RPC evidence, transaction decoding,
+local/testnet simulation planning, x402-aware service gates, and defensive
+agent operations.
+
+<p align="center">
+  <img src="docs/assets/solana-trading-flow.svg" alt="Animated T3MP3ST Solana trading-security flow" width="960" />
+</p>
 
 The package still exposes the historical `t3mp3st` and `tempest` CLI names for
 compatibility, but the default domain model is Solana-first: programs, accounts,
 mints, wallets, RPC endpoints, transaction intents, signer boundaries, PDA/CPI
 surfaces, SPL Token, Token-2022, and simulation-before-signing gates.
+
+## What Changed In This Pass
+
+- Reframed the docs as a Solana trading-security command center:
+  read-only RPC evidence, transaction decoding, route review, quote drift,
+  wallet-prompt safety, simulation gates, and receipt-required signing.
+- Rebuilt the docs homepage at [docs/index.html](docs/index.html) with a Solana
+  trading dashboard, risk gates, and links into the new operating model.
+- Replaced legacy benchmark/security pages with trading-specific references:
+  [AI red-team techniques](docs/AI_REDTEAM_TECHNIQUES.md), [simulation bench](docs/CYBENCH.md),
+  [wall forensics](docs/WALL_FORENSICS.md), [integrity ledger](docs/INTEGRITY_LEDGER.md),
+  and [baseline rules](docs/XBOW_BASELINE.md).
+- Updated the companion Phoenix perpetuals terminal UI in
+  `/Users/8bit/Perp-Dex-Trading-Bot-main/src/ui` so the strategy selector and
+  Trend/Maker/Offset Maker dashboards use Phoenix, Vulcan, Solana, paper/live
+  mode, FIFO order book, account risk, and receipt-gate language.
+- Preserved the safety floor: no private keys or seed phrases, no autonomous
+  swaps/transfers/votes/mints/burns/authority changes, no market manipulation,
+  and no buy/sell/hold advice.
 
 ## Safety Floor
 
