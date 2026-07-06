@@ -5,8 +5,15 @@ import { PhoenixExchangeAdapter } from "../exchanges/phoenix-adapter";
 import { TrendEngine, type TrendEngineSnapshot } from "../core/trend-engine";
 import { formatNumber } from "../utils/format";
 import { DataTable, type TableColumn } from "./components/DataTable";
+import {
+  FooterHint,
+  HeaderPanel,
+  MetricGrid,
+  SafetyPanel,
+  formatPositionSide,
+} from "./components/PhoenixPanels";
 
-const READY_MESSAGE = "正在等待交易所推送数据…";
+const READY_MESSAGE = "Waiting for Phoenix market data";
 
 interface TrendAppProps {
   onExit: () => void;
@@ -33,7 +40,7 @@ export function TrendApp({ onExit }: TrendAppProps) {
     const rpcUrl = process.env.SOLANA_RPC_URL;
     const authority = process.env.WALLET_AUTHORITY;
     if (!rpcUrl) {
-      setError(new Error("缺少 SOLANA_RPC_URL 环境变量"));
+      setError(new Error("Missing SOLANA_RPC_URL environment variable"));
       return;
     }
     try {
@@ -63,8 +70,8 @@ export function TrendApp({ onExit }: TrendAppProps) {
   if (error) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Text color="red">启动失败: {error.message}</Text>
-        <Text color="gray">请检查环境变量和网络连通性。</Text>
+        <Text color="red">Startup failed: {error.message}</Text>
+        <Text color="gray">Check SOLANA_RPC_URL, WALLET_AUTHORITY, Phoenix API connectivity, and wallet permissions.</Text>
       </Box>
     );
   }
@@ -72,7 +79,7 @@ export function TrendApp({ onExit }: TrendAppProps) {
   if (!snapshot) {
     return (
       <Box padding={1}>
-        <Text>正在初始化趋势策略…</Text>
+        <Text>Initializing Phoenix TA trend strategy...</Text>
       </Box>
     );
   }
@@ -99,60 +106,83 @@ export function TrendApp({ onExit }: TrendAppProps) {
     { key: "filled", header: "Filled", align: "right", minWidth: 8 },
     { key: "status", header: "Status", minWidth: 10 },
   ];
+  const trendLabel = trend === "做多" ? "LONG bias" : trend === "做空" ? "SHORT bias" : "No signal";
+  const stopDistance = hasPosition && lastPrice != null
+    ? Math.abs(lastPrice - position.entryPrice)
+    : 0;
 
   return (
     <Box flexDirection="column" paddingX={1} paddingY={0}>
-      <Box flexDirection="column" marginBottom={1}>
-        <Text color="cyanBright">Trend Strategy Dashboard</Text>
-        <Text>
-          交易对: {snapshot.symbol} ｜ 最近价格: {formatNumber(lastPrice, 2)} ｜ SMA30: {formatNumber(sma30, 2)} ｜ 趋势: {trend}
-        </Text>
-        <Text color="gray">状态: {ready ? "实时运行" : READY_MESSAGE} ｜ 按 Esc 返回策略选择</Text>
-      </Box>
+      <HeaderPanel
+        title="Phoenix TA Trend Guard"
+        subtitle="SMA30 signal lane for Phoenix perpetual futures on Solana."
+        symbol={snapshot.symbol}
+        ready={ready}
+        lastUpdated={snapshot.lastUpdated}
+      />
+
+      <MetricGrid
+        metrics={[
+          { label: "Last price", value: `${formatNumber(lastPrice, 2)} USDC`, tone: "info" },
+          { label: "SMA30", value: `${formatNumber(sma30, 2)} USDC`, tone: "muted" },
+          { label: "Trend", value: trendLabel, tone: trendLabel === "No signal" ? "warn" : "ok" },
+          { label: "Session volume", value: `${formatNumber(sessionVolume, 2)} USDC`, tone: "info" },
+          { label: "Trades", value: String(snapshot.totalTrades), tone: "muted" },
+          { label: "Total PnL", value: `${formatNumber(snapshot.totalProfit, 4)} USDC`, tone: snapshot.totalProfit >= 0 ? "ok" : "danger" },
+        ]}
+      />
 
       <Box flexDirection="row" marginBottom={1}>
         <Box flexDirection="column" marginRight={4}>
-          <Text color="greenBright">持仓</Text>
+          <Text color="greenBright">Position</Text>
           {hasPosition ? (
             <>
               <Text>
-                方向: {position.positionAmt > 0 ? "多" : "空"} ｜ 数量: {formatNumber(Math.abs(position.positionAmt), 4)} ｜ 开仓价: {formatNumber(position.entryPrice, 2)}
+                Side: {formatPositionSide(position.positionAmt)} | Size: {formatNumber(Math.abs(position.positionAmt), 4)} | Entry: {formatNumber(position.entryPrice, 2)}
               </Text>
               <Text>
-                浮动盈亏: {formatNumber(snapshot.pnl, 4)} USDT ｜ 账户未实现盈亏: {formatNumber(snapshot.unrealized, 4)} USDT
+                Mark: {formatNumber(position.markPrice, 2)} | PnL: {formatNumber(snapshot.pnl, 4)} USDC | Unrealized: {formatNumber(snapshot.unrealized, 4)} USDC
+              </Text>
+              <Text color="gray">
+                Price distance from entry: {formatNumber(stopDistance, 2)} USDC
               </Text>
             </>
           ) : (
-            <Text color="gray">当前无持仓</Text>
+            <Text color="gray">Flat. No active position from the Phoenix account snapshot.</Text>
           )}
         </Box>
         <Box flexDirection="column">
-          <Text color="greenBright">绩效</Text>
-          <Text>
-            累计交易次数: {snapshot.totalTrades} ｜ 累计收益: {formatNumber(snapshot.totalProfit, 4)} USDT
-          </Text>
-          <Text>
-            累计成交量: {formatNumber(sessionVolume, 2)} USDT
-          </Text>
+          <Text color="greenBright">Signal guard</Text>
           {snapshot.lastOpenSignal.side ? (
-            <Text color="gray">
-              最近开仓信号: {snapshot.lastOpenSignal.side} @ {formatNumber(snapshot.lastOpenSignal.price, 2)}
+            <Text>
+              Last entry signal: {snapshot.lastOpenSignal.side} @ {formatNumber(snapshot.lastOpenSignal.price, 2)}
             </Text>
-          ) : null}
+          ) : (
+            <Text color="gray">No entry signal is active.</Text>
+          )}
+          <Text color="gray">Feed status: {ready ? "subscribed" : READY_MESSAGE}</Text>
         </Box>
       </Box>
 
+      <SafetyPanel
+        items={[
+          { label: "Mode", detail: "Prefer Vulcan paper mode before enabling live authority.", tone: "warn" },
+          { label: "Orders", detail: "Market and stop orders are irreversible once signed on Solana mainnet.", tone: "danger" },
+          { label: "Risk", detail: "Phoenix account health, mark price, and funding should be reviewed outside raw PnL.", tone: "info" },
+        ]}
+      />
+
       <Box flexDirection="column" marginBottom={1}>
-        <Text color="yellow">当前挂单</Text>
+        <Text color="yellow">Open Phoenix orders</Text>
         {orderRows.length > 0 ? (
-          <DataTable columns={orderColumns} rows={orderRows} />
+          <DataTable columns={orderColumns} rows={orderRows} emptyLabel="No open orders" />
         ) : (
-          <Text color="gray">暂无挂单</Text>
+          <Text color="gray">No open orders</Text>
         )}
       </Box>
 
       <Box flexDirection="column">
-        <Text color="yellow">最近交易与事件</Text>
+        <Text color="yellow">Recent strategy events</Text>
         {lastLogs.length > 0 ? (
           lastLogs.map((item, index) => (
             <Text key={`${item.time}-${index}`}>
@@ -160,9 +190,10 @@ export function TrendApp({ onExit }: TrendAppProps) {
             </Text>
           ))
         ) : (
-          <Text color="gray">暂无日志</Text>
+          <Text color="gray">No log entries yet</Text>
         )}
       </Box>
+      <FooterHint />
     </Box>
   );
 }

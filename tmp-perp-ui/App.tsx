@@ -8,26 +8,30 @@ interface StrategyOption {
   id: "trend" | "maker" | "offset-maker";
   label: string;
   description: string;
+  route: string;
   component: React.ComponentType<{ onExit: () => void }>;
 }
 
 const STRATEGIES: StrategyOption[] = [
   {
     id: "trend",
-    label: "趋势跟随策略 (SMA30)",
-    description: "监控均线信号，自动进出场并维护止损/止盈",
+    label: "Phoenix TA Trend Guard",
+    description: "SMA30 signal loop with Phoenix order controls, reduce-only exits, and live feed status.",
+    route: "Vulcan parity: TA strategy, candles, mark price, open orders.",
     component: TrendApp,
   },
   {
     id: "maker",
-    label: "做市刷单策略",
-    description: "双边挂单提供流动性，自动追价与风控止损",
+    label: "Phoenix FIFO Maker",
+    description: "Two-sided passive liquidity view for Phoenix's price-time order book and quote refresh loop.",
+    route: "Vulcan parity: orderbook, limit orders, cancel/modify, account state.",
     component: MakerApp,
   },
   {
     id: "offset-maker",
-    label: "偏移做市策略",
-    description: "根据盘口深度自动偏移挂单并在极端不平衡时撤退",
+    label: "Phoenix Depth Offset Maker",
+    description: "Depth-aware maker lane that offsets quotes and retreats during strong book imbalance.",
+    route: "Vulcan parity: grid-style quoting, orderbook depth, risk-triggered cancels.",
     component: OffsetMakerApp,
   },
 ];
@@ -62,20 +66,31 @@ export function App() {
 
   return (
     <Box flexDirection="column" paddingX={1} paddingY={1}>
-      <Text color="cyanBright">请选择要运行的策略</Text>
-      <Text color="gray">使用 ↑/↓ 选择，回车开始，Ctrl+C 退出。</Text>
+      <Box flexDirection="column" borderStyle="round" borderColor="cyan" paddingX={1} paddingY={0} marginBottom={1}>
+        <Text color="cyanBright">Vulcan Phoenix Perps Console</Text>
+        <Text color="gray">Agent-friendly terminal UI for Phoenix perpetual futures on Solana.</Text>
+        <Text color="yellowBright">Live mode can place irreversible mainnet orders. Use paper mode and strict wallet permissions for agent runs.</Text>
+      </Box>
+      <Text color="gray">Use Up/Down to select, Enter to start, Ctrl+C to exit.</Text>
       <Box flexDirection="column" marginTop={1}>
         {STRATEGIES.map((strategy, index) => {
           const active = index === cursor;
           return (
-            <Box key={strategy.id} flexDirection="column" marginBottom={1}>
+            <Box key={strategy.id} flexDirection="column" marginBottom={1} borderStyle={active ? "single" : undefined} borderColor={active ? "green" : undefined} paddingX={active ? 1 : 0}>
               <Text color={active ? "greenBright" : undefined}>
-                {active ? "➤" : "  "} {strategy.label}
+                {active ? ">" : " "} {strategy.label}
               </Text>
-              <Text color="gray">    {strategy.description}</Text>
+              <Text color="gray">  {strategy.description}</Text>
+              <Text color="gray">  {strategy.route}</Text>
             </Box>
           );
         })}
+      </Box>
+      <Box flexDirection="column" marginTop={1}>
+        <Text color="cyanBright">Phoenix docs map</Text>
+        <Text color="gray">Market data: prices, orderbooks, candles, funding, trades.</Text>
+        <Text color="gray">Trading: market/limit orders, take-profit, stop-loss, cross and isolated margin.</Text>
+        <Text color="gray">Agent surface: Vulcan JSON output and local MCP server; keep dangerous mode opt-in only.</Text>
       </Box>
     </Box>
   );

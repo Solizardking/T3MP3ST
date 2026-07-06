@@ -5,6 +5,13 @@ import { PhoenixExchangeAdapter } from "../exchanges/phoenix-adapter";
 import { MakerEngine, type MakerEngineSnapshot } from "../core/maker-engine";
 import { DataTable, type TableColumn } from "./components/DataTable";
 import { formatNumber } from "../utils/format";
+import {
+  FooterHint,
+  HeaderPanel,
+  MetricGrid,
+  SafetyPanel,
+  formatPositionSide,
+} from "./components/PhoenixPanels";
 
 interface MakerAppProps {
   onExit: () => void;
@@ -31,7 +38,7 @@ export function MakerApp({ onExit }: MakerAppProps) {
     const rpcUrl = process.env.SOLANA_RPC_URL;
     const authority = process.env.WALLET_AUTHORITY;
     if (!rpcUrl) {
-      setError(new Error("缺少 SOLANA_RPC_URL 环境变量"));
+      setError(new Error("Missing SOLANA_RPC_URL environment variable"));
       return;
     }
     try {
@@ -61,8 +68,8 @@ export function MakerApp({ onExit }: MakerAppProps) {
   if (error) {
     return (
       <Box flexDirection="column" padding={1}>
-        <Text color="red">启动失败: {error.message}</Text>
-        <Text color="gray">请检查环境变量和网络连通性。</Text>
+        <Text color="red">Startup failed: {error.message}</Text>
+        <Text color="gray">Check SOLANA_RPC_URL, WALLET_AUTHORITY, Phoenix API connectivity, and wallet permissions.</Text>
       </Box>
     );
   }
@@ -70,14 +77,14 @@ export function MakerApp({ onExit }: MakerAppProps) {
   if (!snapshot) {
     return (
       <Box padding={1}>
-        <Text>正在初始化做市策略…</Text>
+        <Text>Initializing Phoenix FIFO maker...</Text>
       </Box>
     );
   }
 
   const topBid = snapshot.topBid;
   const topAsk = snapshot.topAsk;
-  const spreadDisplay = snapshot.spread != null ? `${snapshot.spread.toFixed(4)} USDT` : "-";
+  const spreadDisplay = snapshot.spread != null ? `${snapshot.spread.toFixed(4)} USDC` : "-";
   const hasPosition = Math.abs(snapshot.position.positionAmt) > 1e-5;
   const sortedOrders = [...snapshot.openOrders].sort((a, b) => (Number(b.updateTime ?? 0) - Number(a.updateTime ?? 0)) || Number(b.orderId) - Number(a.orderId));
   const openOrderRows = sortedOrders.slice(0, 8).map((order) => ({
@@ -115,57 +122,82 @@ export function MakerApp({ onExit }: MakerAppProps) {
   ];
 
   const lastLogs = snapshot.tradeLog.slice(-5);
+  const notional = snapshot.position.markPrice != null
+    ? Math.abs(snapshot.position.positionAmt) * snapshot.position.markPrice
+    : 0;
 
   return (
     <Box flexDirection="column" paddingX={1}>
-      <Box flexDirection="column" marginBottom={1}>
-        <Text color="cyanBright">Maker Strategy Dashboard</Text>
-        <Text>
-          交易对: {snapshot.symbol} ｜ 买一价: {formatNumber(topBid, 2)} ｜ 卖一价: {formatNumber(topAsk, 2)} ｜ 点差: {spreadDisplay}
-        </Text>
-        <Text color="gray">状态: {snapshot.ready ? "实时运行" : "等待市场数据"} ｜ 按 Esc 返回策略选择</Text>
-      </Box>
+      <HeaderPanel
+        title="Phoenix FIFO Maker"
+        subtitle="Two-sided maker lane for Phoenix's FIFO order book and Solana settlement."
+        symbol={snapshot.symbol}
+        ready={snapshot.ready}
+        lastUpdated={snapshot.lastUpdated}
+      />
+
+      <MetricGrid
+        metrics={[
+          { label: "Best bid", value: `${formatNumber(topBid, 2)} USDC`, tone: "ok" },
+          { label: "Best ask", value: `${formatNumber(topAsk, 2)} USDC`, tone: "danger" },
+          { label: "Spread", value: spreadDisplay, tone: snapshot.spread != null && snapshot.spread > 0 ? "info" : "warn" },
+          { label: "Session volume", value: `${formatNumber(snapshot.sessionVolume, 2)} USDC`, tone: "info" },
+          { label: "Open orders", value: String(snapshot.openOrders.length), tone: snapshot.openOrders.length ? "ok" : "warn" },
+          { label: "Target quotes", value: String(snapshot.desiredOrders.length), tone: snapshot.desiredOrders.length ? "ok" : "warn" },
+        ]}
+      />
 
       <Box flexDirection="row" marginBottom={1}>
         <Box flexDirection="column" marginRight={4}>
-          <Text color="greenBright">持仓</Text>
+          <Text color="greenBright">Position</Text>
           {hasPosition ? (
             <>
               <Text>
-                方向: {snapshot.position.positionAmt > 0 ? "多" : "空"} ｜ 数量: {formatNumber(Math.abs(snapshot.position.positionAmt), 4)} ｜ 开仓价: {formatNumber(snapshot.position.entryPrice, 2)}
+                Side: {formatPositionSide(snapshot.position.positionAmt)} | Size: {formatNumber(Math.abs(snapshot.position.positionAmt), 4)} | Entry: {formatNumber(snapshot.position.entryPrice, 2)}
               </Text>
               <Text>
-                浮动盈亏: {formatNumber(snapshot.pnl, 4)} USDT ｜ 账户未实现盈亏: {formatNumber(snapshot.accountUnrealized, 4)} USDT
+                Mark: {formatNumber(snapshot.position.markPrice, 2)} | Notional: {formatNumber(notional, 2)} USDC
+              </Text>
+              <Text>
+                Strategy PnL: {formatNumber(snapshot.pnl, 4)} USDC | Account unrealized: {formatNumber(snapshot.accountUnrealized, 4)} USDC
               </Text>
             </>
           ) : (
-            <Text color="gray">当前无持仓</Text>
+            <Text color="gray">Flat. Maker is quoting without active inventory.</Text>
           )}
         </Box>
         <Box flexDirection="column">
-          <Text color="greenBright">目标挂单</Text>
+          <Text color="greenBright">Desired Phoenix quotes</Text>
           {desiredRows.length > 0 ? (
-            <DataTable columns={desiredColumns} rows={desiredRows} />
+            <DataTable columns={desiredColumns} rows={desiredRows} emptyLabel="No desired quotes" />
           ) : (
-            <Text color="gray">暂无目标挂单</Text>
+            <Text color="gray">No desired quotes</Text>
           )}
           <Text>
-            累计成交量: {formatNumber(snapshot.sessionVolume, 2)} USDT
+            Cumulative volume: {formatNumber(snapshot.sessionVolume, 2)} USDC
           </Text>
         </Box>
       </Box>
 
+      <SafetyPanel
+        items={[
+          { label: "FIFO", detail: "Phoenix user-facing books use price-time priority; avoid churn that only loses queue position.", tone: "info" },
+          { label: "Self trade", detail: "Review self-trade prevention and existing orders before quoting both sides.", tone: "warn" },
+          { label: "Live orders", detail: "Limit orders and cancels mutate mainnet state once signed.", tone: "danger" },
+        ]}
+      />
+
       <Box flexDirection="column" marginBottom={1}>
-        <Text color="yellow">当前挂单</Text>
+        <Text color="yellow">Open Phoenix orders</Text>
         {openOrderRows.length > 0 ? (
-          <DataTable columns={openOrderColumns} rows={openOrderRows} />
+          <DataTable columns={openOrderColumns} rows={openOrderRows} emptyLabel="No open orders" />
         ) : (
-          <Text color="gray">暂无挂单</Text>
+          <Text color="gray">No open orders</Text>
         )}
       </Box>
 
       <Box flexDirection="column">
-        <Text color="yellow">最近事件</Text>
+        <Text color="yellow">Recent maker events</Text>
         {lastLogs.length > 0 ? (
           lastLogs.map((item, index) => (
             <Text key={`${item.time}-${index}`}>
@@ -173,9 +205,10 @@ export function MakerApp({ onExit }: MakerAppProps) {
             </Text>
           ))
         ) : (
-          <Text color="gray">暂无日志</Text>
+          <Text color="gray">No log entries yet</Text>
         )}
       </Box>
+      <FooterHint />
     </Box>
   );
 }
